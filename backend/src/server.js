@@ -1,4 +1,3 @@
-// src/server.js
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
@@ -23,8 +22,18 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Middleware
-app.use(express.json());
-app.use(cors());
+// Serve il frontend statico
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Route home page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+app.use(express.json({ limit: '10mb' })); // Aumenta il limite per upload
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE']
+}));
 app.use(helmet());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -34,18 +43,37 @@ app.use('/api/memes', memeRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/votes', voteRoutes);
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'OK' });
+});
+
 // Connessione a MongoDB e avvio del server
 const PORT = process.env.PORT || 5000;
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => {
-  console.log('✅ Connesso a MongoDB');
-  app.listen(PORT, () => {
-    console.log(`🚀 Server in esecuzione su http://localhost:${PORT}`);
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('❌ MONGODB_URI non definita nel file .env');
+  process.exit(1);
+}
+
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log('✅ Connesso a MongoDB');
+    app.listen(PORT, () => {
+      console.log(`🚀 Server in esecuzione su http://localhost:${PORT}`);
+      console.log(`📁 Percorso uploads: ${path.join(__dirname, '../uploads')}`);
+    });
+  })
+  .catch((err) => {
+    console.error('❌ Errore di connessione a MongoDB:', err.message);
+    process.exit(1);
   });
-})
-.catch((err) => {
-  console.error('❌ Errore di connessione a MongoDB:', err);
+
+// Gestione errori centralizzata
+process.on('unhandledRejection', (err) => {
+  console.error('⚠️ Errore non gestito:', err);
 });
+
+// Export per testing
+export default app;

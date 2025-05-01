@@ -1,5 +1,5 @@
 // src/models/Meme.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const memeSchema = new mongoose.Schema({
   title: {
@@ -29,4 +29,4 @@ const memeSchema = new mongoose.Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model('Meme', memeSchema);
+export default mongoose.model('Meme', memeSchema);

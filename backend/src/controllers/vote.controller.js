@@ -1,8 +1,8 @@
 // src/controllers/vote.controller.js
-const Vote = require('../models/Vote.js');
-const Meme = require('../models/Meme.js');
+import Vote from '../models/Vote.js';
+import Meme from '../models/Meme.js';
 
-exports.voteMeme = async (req, res) => {
+export const voteMeme = async (req, res) => {
   try {
     const { memeId } = req.params;
     const { value } = req.body; // value: 1 (upvote) o -1 (downvote)
@@ -63,3 +63,6 @@ exports.voteMeme = async (req, res) => {
     res.status(500).json({ message: 'Errore durante la votazione.' });
   }
 };
+
+// Aggiungi in fondo al file:
+export default { voteMeme };

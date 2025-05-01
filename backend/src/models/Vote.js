@@ -1,5 +1,5 @@
 // src/models/Vote.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const voteSchema = new mongoose.Schema({
   meme: {
@@ -23,4 +23,4 @@ const voteSchema = new mongoose.Schema({
 
 voteSchema.index({ meme: 1, user: 1 }, { unique: true }); // un solo voto per utente per meme
 
-module.exports = mongoose.model('Vote', voteSchema);
+export default mongoose.model('Vote', voteSchema);

@@ -1,7 +1,7 @@
 // src/controllers/comment.controller.js
-const Comment = require('../models/Comment.js');
+import Comment from '../models/Comment.js';
 
-exports.createComment = async (req, res) => {
+export const createComment = async (req, res) => {
   try {
     const { text } = req.body;
     const memeId = req.params.memeId;
@@ -20,7 +20,7 @@ exports.createComment = async (req, res) => {
   }
 };
 
-exports.getCommentsForMeme = async (req, res) => {
+export const getCommentsForMeme = async (req, res) => {
   try {
     const memeId = req.params.memeId;
     const comments = await Comment.find({ meme: memeId }).populate('author', 'username').sort({ createdAt: -1 });

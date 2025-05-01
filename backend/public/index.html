@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MEMEMUSEUM - Home</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>MEMEMUSEUM</h1>
+    <p>I Meme del Giorno</p>
+  </header>
+
+  <main>
+    <div class="grid" id="meme-grid">
+
+        
+      <!-- I meme verranno inseriti qui via JS -->
+    </div>
+  </main>
+  
+<!-- Form per l'upload di immagini -->
+<section class="upload-section">
+    <h2>Carica un nuovo meme</h2>
+    <form id="upload-form" enctype="multipart/form-data">
+      <input type="file" name="image" accept="image/*" required />
+      <button type="submit">Aggiungi Foto</button>
+    </form>
+    <p id="upload-status"></p>
+  </section>
+  
+  <footer>
+    <p>© 2025 MEMEMUSEUM</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
