@@ -8,7 +8,6 @@ const router = express.Router();
 
 // Carica un nuovo meme (autenticazione + upload immagine)
 router.post('/', authMiddleware, upload.single('image'), uploadMeme);
-
 // Recupera tutti i meme
 router.get('/', getAllMemes);
 

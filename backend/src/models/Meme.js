@@ -17,13 +17,9 @@ const memeSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  upvotes: {
+  votes: {
     type: Number,
-    default: 0
-  },
-  downvotes: {
-    type: Number,
-    default: 0
+    default: 0 // Valore iniziale dei voti
   }
 }, {
   timestamps: true

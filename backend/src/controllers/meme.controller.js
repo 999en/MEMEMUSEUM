@@ -6,19 +6,21 @@ import path from 'path';
 export const uploadMeme = async (req, res) => {
   try {
     const { title, tags } = req.body;
-    const uploader = req.user.id; // disponibile grazie a authMiddleware
+    const uploader = req.user.id; // Disponibile grazie a authMiddleware
 
-    if (!req.file) return res.status(400).json({ message: 'Nessuna immagine caricata' });
+    if (!req.file) {
+      return res.status(400).json({ message: 'Nessuna immagine caricata' });
+    }
 
     const meme = new Meme({
       title,
       tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
-      imageUrl: `/uploads/${req.file.filename}`,
+      imageUrl: `/uploads/${req.file.filename}`, // Salva il percorso dell'immagine
       uploader
     });
 
     await meme.save();
-    res.status(201).json(meme);
+    res.status(201).json(meme); // Ritorna il meme salvato
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Errore durante il caricamento del meme' });

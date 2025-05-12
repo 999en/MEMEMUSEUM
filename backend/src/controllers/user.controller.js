@@ -3,13 +3,17 @@ import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 
 export const register = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, password } = req.body;
 
   try {
-    const user = new User({ username, email, password });
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Username già in uso' });
+    }
+
+    const user = new User({ username, password });
     await user.save();
 
-    // Generazione del token JWT
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.status(201).json({
@@ -23,23 +27,15 @@ export const register = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ username });
 
-    if (!user) {
-      return res.status(404).json({ message: 'Utente non trovato' });
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(400).json({ message: 'Credenziali non valide' });
     }
 
-    // Verifica della password
-    const isMatch = await user.comparePassword(password);
-
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Password errata' });
-    }
-
-    // Generazione del token JWT
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.status(200).json({
