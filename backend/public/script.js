@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const welcomeMessage = document.getElementById('welcome-message');
   const usernameSpan = document.getElementById('username');
   const registerButton = document.getElementById('register-button');
+  const logoutButton = document.getElementById('logout-button');
   const postDetails = document.getElementById('post-details');
   const closePostButton = document.getElementById('close-post');
   const postAuthor = document.getElementById('post-author');
@@ -13,6 +14,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const commentsList = document.getElementById('comments-list');
   const commentForm = document.getElementById('comment-form');
   const commentText = document.getElementById('comment-text');
+  const loginModal = document.getElementById('login-modal');
+  const registerModal = document.getElementById('register-modal');
+  const closeLoginModal = document.getElementById('close-login-modal');
+  const closeRegisterModal = document.getElementById('close-register-modal');
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
 
   // Funzione per verificare se l'utente è autenticato
   function checkAuthentication() {
@@ -22,16 +29,38 @@ document.addEventListener('DOMContentLoaded', async () => {
       usernameSpan.textContent = payload.username;
       welcomeMessage.style.display = 'block';
       authButton.style.display = 'none';
+      registerButton.style.display = 'none';
+      logoutButton.style.display = 'inline-block';
     } else {
       welcomeMessage.style.display = 'none';
-      authButton.style.display = 'block';
+      authButton.style.display = 'inline-block';
+      registerButton.style.display = 'inline-block';
+      logoutButton.style.display = 'none';
     }
   }
 
   // Gestione del click sul bottone di autenticazione
   authButton.addEventListener('click', () => {
-    const username = prompt('Inserisci il tuo username:');
-    const password = prompt('Inserisci la tua password:');
+    loginModal.style.display = 'flex';
+  });
+
+  registerButton.addEventListener('click', () => {
+    registerModal.style.display = 'flex';
+  });
+
+  closeLoginModal.addEventListener('click', () => {
+    loginModal.style.display = 'none';
+  });
+
+  closeRegisterModal.addEventListener('click', () => {
+    registerModal.style.display = 'none';
+  });
+
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+
     fetch('/api/users/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -42,6 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (data.token) {
           localStorage.setItem('token', data.token);
           checkAuthentication();
+          loginModal.style.display = 'none';
         } else {
           alert('Autenticazione fallita!');
         }
@@ -49,10 +79,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       .catch(err => console.error('Errore durante l\'autenticazione:', err));
   });
 
-  // Gestione del click sul bottone di registrazione
-  registerButton.addEventListener('click', () => {
-    const username = prompt('Scegli un username:');
-    const password = prompt('Scegli una password:');
+  registerForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = document.getElementById('register-username').value;
+    const password = document.getElementById('register-password').value;
+
     fetch('/api/users/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -64,11 +95,18 @@ document.addEventListener('DOMContentLoaded', async () => {
           localStorage.setItem('token', data.token);
           alert('Registrazione completata con successo!');
           checkAuthentication();
+          registerModal.style.display = 'none';
         } else {
           alert(`Errore durante la registrazione: ${data.message}`);
         }
       })
       .catch(err => console.error('Errore durante la registrazione:', err));
+  });
+
+  // Gestione del click sul bottone di logout
+  logoutButton.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    checkAuthentication();
   });
 
   // Verifica autenticazione al caricamento della pagina

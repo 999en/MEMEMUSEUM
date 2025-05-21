@@ -225,3 +225,96 @@
   #close-post:hover {
     background-color: #444;
   }
+
+  #auth-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  #auth-buttons button {
+    background-color: #222;
+    color: white;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  #auth-buttons button:hover {
+    background-color: #444;
+  }
+
+  .modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+  }
+
+  .modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    position: relative; /* Necessario per posizionare il bottone "X" all'interno */
+  }
+
+  .modal-content h2 {
+    margin-bottom: 1rem;
+  }
+
+  .modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .modal-content input {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  .modal-content input:focus {
+    outline: none;
+    border-color: #444;
+  }
+
+  .modal-content button {
+    padding: 0.5rem;
+    background-color: #222;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  .modal-content button:hover {
+    background-color: #444;
+  }
+
+  .close-button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #444;
+    cursor: pointer;
+    z-index: 10; /* Assicura che sia sopra gli elementi del modal-content */
+  }
+
+  .close-button:hover {
+    color: #222;
+  }
