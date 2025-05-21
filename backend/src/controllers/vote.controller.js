@@ -5,7 +5,7 @@ import Meme from '../models/Meme.js';
 export const voteMeme = async (req, res) => {
   try {
     const { memeId } = req.params;
-    const { value } = req.body; // value: 1 (upvote) o -1 (downvote)
+    const { value } = req.body; // value: 1 (like) o -1 (dislike)
     const userId = req.user.id;
 
     if (![1, -1].includes(value)) {
@@ -15,54 +15,46 @@ export const voteMeme = async (req, res) => {
     // Verifica se l'utente ha già votato questo meme
     let existingVote = await Vote.findOne({ meme: memeId, user: userId });
 
+    let updatedVotes;
     if (!existingVote) {
       // Nuovo voto
       const vote = new Vote({ meme: memeId, user: userId, value });
       await vote.save();
 
-      // Aggiorna il conteggio dei voti nel meme
-      await Meme.findByIdAndUpdate(memeId, {
-        $inc: {
-          upvotes: value === 1 ? 1 : 0,
-          downvotes: value === -1 ? 1 : 0
-        }
-      });
+      const meme = await Meme.findByIdAndUpdate(memeId, {
+        $inc: { votes: value }
+      }, { new: true });
 
-      return res.status(201).json({ message: 'Voto registrato.' });
+      updatedVotes = meme.votes;
     } else {
       if (existingVote.value === value) {
         // Annulla il voto
         await existingVote.deleteOne();
 
-        await Meme.findByIdAndUpdate(memeId, {
-          $inc: {
-            upvotes: value === 1 ? -1 : 0,
-            downvotes: value === -1 ? -1 : 0
-          }
-        });
+        const meme = await Meme.findByIdAndUpdate(memeId, {
+          $inc: { votes: -value }
+        }, { new: true });
 
-        return res.status(200).json({ message: 'Voto annullato.' });
+        updatedVotes = meme.votes;
       } else {
         // Modifica il voto
         const previousValue = existingVote.value;
         existingVote.value = value;
         await existingVote.save();
 
-        await Meme.findByIdAndUpdate(memeId, {
-          $inc: {
-            upvotes: value === 1 ? 1 : -1,
-            downvotes: value === -1 ? 1 : -1
-          }
-        });
+        const meme = await Meme.findByIdAndUpdate(memeId, {
+          $inc: { votes: value - previousValue }
+        }, { new: true });
 
-        return res.status(200).json({ message: 'Voto aggiornato.' });
+        updatedVotes = meme.votes;
       }
     }
+
+    return res.status(200).json({ updatedVotes });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Errore durante la votazione.' });
   }
 };
 
-// Aggiungi in fondo al file:
 export default { voteMeme };

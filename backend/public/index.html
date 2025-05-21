@@ -10,6 +10,9 @@
   <header>
     <h1>MEMEMUSEUM</h1>
     <p>I Meme del Giorno</p>
+    <button id="auth-button">Accedi</button>
+    <button id="register-button">Registrati</button>
+    <p id="welcome-message" style="display: none;">Benvenuto, <span id="username"></span>!</p>
   </header>
 
   <main>
@@ -22,10 +25,25 @@
   <section class="upload-section">
     <h2>Carica un nuovo meme</h2>
     <form id="upload-form" enctype="multipart/form-data">
+      <input type="text" name="tags" id="meme-tags" placeholder="Tag (separati da virgola, opzionale)" />
       <input type="file" name="image" accept="image/*" required />
       <button type="submit">Aggiungi Foto</button>
     </form>
     <p id="upload-status"></p>
+  </section>
+
+  <section id="post-details" style="display: none;">
+    <button id="close-post">Chiudi</button>
+    <h2 id="post-author">Autore: </h2>
+    <img id="post-image" src="" alt="Meme" />
+    <div id="comments-section">
+      <h3>Commenti</h3>
+      <ul id="comments-list"></ul>
+      <form id="comment-form">
+        <textarea id="comment-text" placeholder="Scrivi un commento..." required></textarea>
+        <button type="submit">Aggiungi Commento</button>
+      </form>
+    </div>
   </section>
   
   <footer>

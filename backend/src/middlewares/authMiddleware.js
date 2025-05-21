@@ -12,7 +12,7 @@ export default function (req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // contiene l'id dell'utente
+    req.user = { id: decoded.id, username: decoded.username }; // contiene l'id e il nome utente
     next();
   } catch (err) {
     return res.status(403).json({ message: 'Token non valido' });

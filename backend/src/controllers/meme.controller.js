@@ -1,6 +1,7 @@
 // src/controllers/meme.controller.js
 import Meme from '../models/Meme.js';
 import path from 'path';
+import fs from 'fs';
 
 // Upload di un nuovo meme
 export const uploadMeme = async (req, res) => {
@@ -12,11 +13,13 @@ export const uploadMeme = async (req, res) => {
       return res.status(400).json({ message: 'Nessuna immagine caricata' });
     }
 
+    const parsedTags = tags ? tags.split(',').map(tag => tag.trim()) : [];
+
     const meme = new Meme({
-      title,
-      tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
-      imageUrl: `/uploads/${req.file.filename}`, // Salva il percorso dell'immagine
-      uploader
+      title: title || 'Meme senza titolo',
+      tags: parsedTags,
+      imageUrl: `/uploads/${req.file.filename}`, // Salva il percorso relativo dell'immagine
+      uploader, // Associa l'utente autenticato
     });
 
     await meme.save();
@@ -30,17 +33,18 @@ export const uploadMeme = async (req, res) => {
 // Recupera tutti i meme
 export const getAllMemes = async (req, res) => {
   try {
-    const memes = await Meme.find().sort({ createdAt: -1 });
+    const memes = await Meme.find().sort({ createdAt: -1 }).populate('uploader', 'username');
     res.json(memes);
   } catch (err) {
-    res.status(500).json({ message: 'Errore nel recupero dei meme' });
+    console.error('Errore nel recupero dei meme:', err);
+    res.status(500).json({ message: 'Errore nel recupero dei meme.' });
   }
 };
 
 // Recupera un meme specifico
 export const getMemeById = async (req, res) => {
   try {
-    const meme = await Meme.findById(req.params.id);
+    const meme = await Meme.findById(req.params.id).populate('uploader', 'username');
     if (!meme) return res.status(404).json({ message: 'Meme non trovato' });
     res.json(meme);
   } catch (err) {

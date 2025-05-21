@@ -14,7 +14,7 @@ export const register = async (req, res) => {
     const user = new User({ username, password });
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.status(201).json({
       message: 'Registrazione completata con successo!',
@@ -36,7 +36,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'Credenziali non valide' });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.status(200).json({
       message: 'Login riuscito!',
