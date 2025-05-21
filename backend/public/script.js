@@ -33,11 +33,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       authButton.style.display = 'none';
       registerButton.style.display = 'none';
       logoutButton.style.display = 'inline-block';
+      uploadMemeButton.style.display = 'inline-block';
     } else {
       welcomeMessage.style.display = 'none';
       authButton.style.display = 'inline-block';
       registerButton.style.display = 'inline-block';
       logoutButton.style.display = 'none';
+      uploadMemeButton.style.display = 'none';
     }
   }
 
@@ -190,24 +192,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         img.alt = 'Meme';
         img.addEventListener('click', () => openPost(meme._id)); // Apre il post
 
+        const tags = document.createElement('p');
+        tags.classList.add('tags');
+        tags.textContent = meme.tags?.length ? `Tag: ${meme.tags.join(', ')}` : 'Tag: Nessun tag';
+
         const voteContainer = document.createElement('div');
         voteContainer.classList.add('vote-container');
 
         const likeButton = document.createElement('button');
         likeButton.textContent = '👍';
-        const voteCount = document.createElement('span');
-        voteCount.textContent = meme.votes;
+        const likeCount = document.createElement('span');
+        likeCount.textContent = meme.likes || 0;
+
         const dislikeButton = document.createElement('button');
         dislikeButton.textContent = '👎';
+        const dislikeCount = document.createElement('span');
+        dislikeCount.textContent = meme.dislikes || 0;
 
-        likeButton.addEventListener('click', () => voteMeme(meme._id, 1, voteCount));
-        dislikeButton.addEventListener('click', () => voteMeme(meme._id, -1, voteCount));
+        likeButton.addEventListener('click', () => voteMeme(meme._id, 1, likeCount, dislikeCount));
+        dislikeButton.addEventListener('click', () => voteMeme(meme._id, -1, likeCount, dislikeCount));
 
         voteContainer.appendChild(likeButton);
-        voteContainer.appendChild(voteCount);
+        voteContainer.appendChild(likeCount);
         voteContainer.appendChild(dislikeButton);
+        voteContainer.appendChild(dislikeCount);
 
         memeContainer.appendChild(img);
+        memeContainer.appendChild(tags);
         memeContainer.appendChild(voteContainer);
         grid.appendChild(memeContainer);
       });
@@ -216,7 +227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  function voteMeme(memeId, value, voteCountElement) {
+  function voteMeme(memeId, value, likeCountElement, dislikeCountElement) {
     const token = localStorage.getItem('token');
     if (!token) {
       alert('Devi essere autenticato per votare.');
@@ -233,9 +244,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     })
       .then(res => res.json())
       .then(data => {
-        if (data.updatedVotes !== undefined) {
-          // Aggiorna dinamicamente il conteggio dei voti
-          voteCountElement.textContent = data.updatedVotes;
+        if (data.updatedLikes !== undefined && data.updatedDislikes !== undefined) {
+          // Aggiorna dinamicamente il conteggio dei like e dislike
+          likeCountElement.textContent = data.updatedLikes;
+          dislikeCountElement.textContent = data.updatedDislikes;
         }
       })
       .catch(err => console.error('Errore durante la votazione:', err));
