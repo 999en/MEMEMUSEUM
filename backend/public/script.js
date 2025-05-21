@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const grid = document.getElementById('meme-grid');
-  const uploadForm = document.getElementById('upload-form');
-  const uploadStatus = document.getElementById('upload-status');
   const authButton = document.getElementById('auth-button');
   const welcomeMessage = document.getElementById('welcome-message');
   const usernameSpan = document.getElementById('username');
@@ -20,6 +18,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const closeRegisterModal = document.getElementById('close-register-modal');
   const loginForm = document.getElementById('login-form');
   const registerForm = document.getElementById('register-form');
+  const uploadMemeButton = document.getElementById('upload-meme-button');
+  const uploadMemeModal = document.getElementById('upload-meme-modal');
+  const closeUploadModal = document.getElementById('close-upload-modal');
+  const uploadMemeForm = document.getElementById('upload-meme-form');
 
   // Funzione per verificare se l'utente è autenticato
   function checkAuthentication() {
@@ -125,6 +127,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       postAuthor.textContent = `Autore: ${meme.uploader?.username || 'Sconosciuto'}`;
       postImage.src = meme.imageUrl;
       postImage.alt = 'Meme';
+
+      // Visualizza i tag
+      const tags = meme.tags?.length ? meme.tags.join(', ') : 'Nessun tag';
+      document.getElementById('post-tags').textContent = `Tag: ${tags}`;
 
       // Carica i commenti
       const commentsRes = await fetch(`/api/comments/${memeId}`);
@@ -238,40 +244,45 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Carica i meme al caricamento della pagina
   loadMemes();
 
-  // Gestione dell'invio del modulo di upload
-  uploadForm.addEventListener('submit', async (e) => {
+  uploadMemeButton.addEventListener('click', () => {
+    uploadMemeModal.style.display = 'flex';
+  });
+
+  closeUploadModal.addEventListener('click', () => {
+    uploadMemeModal.style.display = 'none';
+  });
+
+  uploadMemeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
     if (!token) {
-      uploadStatus.textContent = '❌ Devi essere autenticato per caricare un meme.';
+      alert('You must be logged in to upload a meme.');
       return;
     }
 
-    const formData = new FormData(uploadForm);
-    const tags = document.getElementById('meme-tags').value.trim();
-
-    if (tags) formData.append('tags', tags);
+    const formData = new FormData(uploadMemeForm);
 
     try {
       const res = await fetch('/api/memes', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${token}`
         },
         body: formData,
       });
 
       if (res.ok) {
-        uploadStatus.textContent = '✅ Meme caricato con successo!';
-        uploadForm.reset();
-        loadMemes(); // Ricarica la griglia dei meme
+        alert('Meme uploaded successfully!');
+        uploadMemeModal.style.display = 'none';
+        uploadMemeForm.reset();
+        loadMemes(); // Reload memes
       } else {
         const errorData = await res.json();
-        uploadStatus.textContent = `❌ Errore: ${errorData.message || 'Impossibile caricare il meme.'}`;
+        alert(`Error: ${errorData.message || 'Failed to upload meme.'}`);
       }
     } catch (error) {
-      console.error('Errore durante il caricamento del meme:', error);
-      uploadStatus.textContent = '❌ Errore durante il caricamento del meme.';
+      console.error('Error uploading meme:', error);
+      alert('Error uploading meme.');
     }
   });
 });

@@ -50,57 +50,7 @@
     background-color: #222;
     color: white;
   }
-  .upload-section {
-    margin-bottom: 2rem;
-  }
   
-  .upload-section h2 {
-    margin-bottom: 0.5rem;
-  }
-  
-  #upload-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  #upload-form input[type="file"] {
-    padding: 0.5rem;
-  }
-
-  #upload-form input[type="text"] {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-
-  #upload-form input[type="text"]:focus {
-    outline: none;
-    border-color: #444;
-  }
-
-  #upload-form input[type="text"]::placeholder {
-    font-style: italic;
-    color: #888;
-  }
-  
-  #upload-form button {
-    padding: 0.5rem;
-    background-color: #222;
-    color: white;
-    border: none;
-    cursor: pointer;
-  }
-  
-  #upload-form button:hover {
-    background-color: #444;
-  }
-  
-  #upload-status {
-    margin-top: 0.5rem;
-    font-style: italic;
-  }
-
   .meme-container {
     display: flex;
     flex-direction: column;
@@ -229,6 +179,7 @@
   #auth-buttons {
     display: flex;
     gap: 0.5rem;
+    align-items: center;
   }
 
   #auth-buttons button {
@@ -317,4 +268,46 @@
 
   .close-button:hover {
     color: #222;
+  }
+
+  .upload-button {
+    background-color: #6c63ff;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .upload-button:hover {
+    background-color: #574dcf;
+  }
+
+  .upload-image-container {
+    border: 2px dashed #6c63ff;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    color: #6c63ff;
+    cursor: pointer;
+  }
+
+  .upload-image-container:hover {
+    background-color: #f9f9f9;
+  }
+
+  .upload-submit-button {
+    background-color: #6c63ff;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .upload-submit-button:hover {
+    background-color: #574dcf;
   }

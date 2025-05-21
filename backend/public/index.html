@@ -10,10 +10,11 @@
   <header>
     <h1>MEMEMUSEUM</h1>
     <p>I Meme del Giorno</p>
-    <div id="auth-buttons" style="position: absolute; top: 1rem; right: 1rem;">
+    <div id="auth-buttons" style="position: absolute; top: 1rem; right: 1rem; display: flex; gap: 0.5rem;">
       <button id="auth-button">Accedi</button>
       <button id="register-button">Registrati</button>
       <button id="logout-button" style="display: none;">Logout</button>
+      <button id="upload-meme-button" class="upload-button">Upload Meme</button>
     </div>
     <p id="welcome-message" style="display: none;">Benvenuto, <span id="username"></span>!</p>
   </header>
@@ -23,22 +24,32 @@
       <!-- I meme verranno inseriti qui via JS -->
     </div>
   </main>
-  
-  <!-- Form per l'upload di immagini -->
-  <section class="upload-section">
-    <h2>Carica un nuovo meme</h2>
-    <form id="upload-form" enctype="multipart/form-data">
-      <input type="text" name="tags" id="meme-tags" placeholder="Tag (separati da virgola, opzionale)" />
-      <input type="file" name="image" accept="image/*" required />
-      <button type="submit">Aggiungi Foto</button>
-    </form>
-    <p id="upload-status"></p>
-  </section>
+
+  <div id="upload-meme-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <button id="close-upload-modal" class="close-button">X</button>
+      <h2>Upload a Meme</h2>
+      <form id="upload-meme-form" enctype="multipart/form-data">
+        <label for="meme-image">Upload Image</label>
+        <div class="upload-image-container">
+          <input type="file" id="meme-image" name="image" accept="image/*" required />
+          <p>Click to upload or drag and drop</p>
+          <p>PNG, JPG or GIF (MAX. 5MB)</p>
+        </div>
+        
+        <label for="meme-tags">Tags (comma separated)</label>
+        <input type="text" id="meme-tags" name="tags" placeholder="funny, cat, reaction, ..." />
+        
+        <button type="submit" class="upload-submit-button">Upload Meme</button>
+      </form>
+    </div>
+  </div>
 
   <section id="post-details" style="display: none;">
     <button id="close-post">Chiudi</button>
     <h2 id="post-author">Autore: </h2>
     <img id="post-image" src="" alt="Meme" />
+    <p id="post-tags" style="font-style: italic; color: #666;">Tag: </p>
     <div id="comments-section">
       <h3>Commenti</h3>
       <ul id="comments-list"></ul>
