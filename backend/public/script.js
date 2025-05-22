@@ -192,40 +192,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         const img = document.createElement('img');
         img.src = meme.imageUrl; // Imposta l'URL dell'immagine
         img.alt = 'Meme';
-        img.addEventListener('click', () => openPost(meme._id)); // Apre il post
+
+        const infoPanel = document.createElement('div');
+        infoPanel.classList.add('info-panel');
+
+        const title = document.createElement('h2');
+        title.textContent = meme.title || 'Titolo non disponibile';
+
+        const author = document.createElement('p');
+        author.textContent = `Autore: ${meme.uploader?.username || 'Sconosciuto'}`;
 
         const tags = document.createElement('p');
         tags.classList.add('tags');
-        tags.textContent = meme.tags?.length ? `Tag: ${meme.tags.join(', ')}` : 'Tag: Nessun tag';
+        tags.textContent = `Tag: ${meme.tags?.join(', ') || 'Nessun tag'}`;
 
-        const voteContainer = document.createElement('div');
-        voteContainer.classList.add('vote-container');
-
-        const likeButton = document.createElement('button');
-        likeButton.textContent = '👍';
-        const likeCount = document.createElement('span');
-        likeCount.textContent = meme.likes || 0;
-
-        const dislikeButton = document.createElement('button');
-        dislikeButton.textContent = '👎';
-        const dislikeCount = document.createElement('span');
-        dislikeCount.textContent = meme.dislikes || 0;
-
-        likeButton.addEventListener('click', () => voteMeme(meme._id, 1, likeCount, dislikeCount));
-        dislikeButton.addEventListener('click', () => voteMeme(meme._id, -1, likeCount, dislikeCount));
-
-        voteContainer.appendChild(likeButton);
-        voteContainer.appendChild(likeCount);
-        voteContainer.appendChild(dislikeButton);
-        voteContainer.appendChild(dislikeCount);
+        infoPanel.appendChild(title);
+        infoPanel.appendChild(author);
+        infoPanel.appendChild(tags);
 
         memeContainer.appendChild(img);
-        memeContainer.appendChild(tags);
-        memeContainer.appendChild(voteContainer);
+        memeContainer.appendChild(infoPanel);
+
+        // Aggiungi evento per mostrare i dettagli del post al clic sull'immagine
+        img.addEventListener('click', () => openPost(meme._id));
+
         grid.appendChild(memeContainer);
       });
     } catch (error) {
       console.error('Errore durante il caricamento dei meme:', error);
+      grid.innerHTML = `<p style="color: red;">Errore durante il caricamento dei meme: ${error.message}</p>`;
     }
   }
 
