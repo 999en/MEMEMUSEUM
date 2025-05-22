@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const uploadMemeModal = document.getElementById('upload-meme-modal');
   const closeUploadModal = document.getElementById('close-upload-modal');
   const uploadMemeForm = document.getElementById('upload-meme-form');
+  const searchBar = document.getElementById('search-bar');
+  const searchButton = document.getElementById('search-button');
 
   // Funzione per verificare se l'utente è autenticato
   function checkAuthentication() {
@@ -251,6 +253,75 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       })
       .catch(err => console.error('Errore durante la votazione:', err));
+  }
+
+  searchButton.addEventListener('click', () => {
+    const query = searchBar.value.trim().toLowerCase();
+    if (query) {
+      filterMemesByTag(query);
+    } else {
+      loadMemes(); // Ricarica tutti i meme se la barra di ricerca è vuota
+    }
+  });
+
+  async function filterMemesByTag(tag) {
+    try {
+      const res = await fetch('/api/memes'); // Recupera tutti i meme dal backend
+      const memes = await res.json();
+
+      const filteredMemes = memes.filter(meme =>
+        meme.tags?.some(t => t.toLowerCase().includes(tag))
+      );
+
+      grid.innerHTML = ''; // Pulisce la griglia
+
+      if (filteredMemes.length === 0) {
+        grid.innerHTML = '<p style="color: white;">Nessun meme trovato con il tag specificato.</p>';
+        return;
+      }
+
+      filteredMemes.forEach((meme) => {
+        const memeContainer = document.createElement('div');
+        memeContainer.classList.add('meme-container');
+
+        const img = document.createElement('img');
+        img.src = meme.imageUrl;
+        img.alt = 'Meme';
+
+        const tags = document.createElement('p');
+        tags.classList.add('tags');
+        tags.textContent = meme.tags?.length ? `Tag: ${meme.tags.join(', ')}` : 'Tag: Nessun tag';
+
+        const voteContainer = document.createElement('div');
+        voteContainer.classList.add('vote-container');
+
+        const likeButton = document.createElement('button');
+        likeButton.textContent = '👍';
+        const likeCount = document.createElement('span');
+        likeCount.textContent = meme.likes || 0;
+
+        const dislikeButton = document.createElement('button');
+        dislikeButton.textContent = '👎';
+        const dislikeCount = document.createElement('span');
+        dislikeCount.textContent = meme.dislikes || 0;
+
+        likeButton.addEventListener('click', () => voteMeme(meme._id, 1, likeCount, dislikeCount));
+        dislikeButton.addEventListener('click', () => voteMeme(meme._id, -1, likeCount, dislikeCount));
+
+        voteContainer.appendChild(likeButton);
+        voteContainer.appendChild(likeCount);
+        voteContainer.appendChild(dislikeButton);
+        voteContainer.appendChild(dislikeCount);
+
+        memeContainer.appendChild(img);
+        memeContainer.appendChild(tags);
+        memeContainer.appendChild(voteContainer);
+        grid.appendChild(memeContainer);
+      });
+    } catch (error) {
+      console.error('Errore durante il filtraggio dei meme:', error);
+      grid.innerHTML = `<p style="color: red;">Errore durante il filtraggio dei meme: ${error.message}</p>`;
+    }
   }
 
   // Carica i meme al caricamento della pagina
