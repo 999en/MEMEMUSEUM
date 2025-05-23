@@ -249,13 +249,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const author = document.createElement('p');
         author.textContent = `Autore: ${meme.uploader?.username || 'Sconosciuto'}`;
 
-        const tags = document.createElement('p');
-        tags.classList.add('tags');
-        tags.innerHTML = meme.tags?.map(tag => `<span class="tags">${tag.trim()}</span>`).join(' ') || '<span class="tags">Nessun tag</span>';
+        const tagsContainer = document.createElement('div');
+        tagsContainer.classList.add('tags-container');
+        if (meme.tags?.length) {
+          meme.tags.forEach(tag => {
+            const tagElement = document.createElement('span');
+            tagElement.classList.add('tag');
+            tagElement.textContent = `#${tag.trim()}`;
+            tagsContainer.appendChild(tagElement);
+          });
+        }
 
         infoPanel.appendChild(title);
         infoPanel.appendChild(author);
-        infoPanel.appendChild(tags);
+        if (tagsContainer.childElementCount > 0) infoPanel.appendChild(tagsContainer);
 
         memeContainer.appendChild(img);
         memeContainer.appendChild(infoPanel);
@@ -330,34 +337,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         img.src = meme.imageUrl;
         img.alt = 'Meme';
 
-        const tags = document.createElement('p');
-        tags.classList.add('tags');
-        tags.textContent = meme.tags?.length ? `Tag: ${meme.tags.join(', ')}` : 'Tag: Nessun tag';
+        const infoPanel = document.createElement('div');
+        infoPanel.classList.add('info-panel');
 
-        const voteContainer = document.createElement('div');
-        voteContainer.classList.add('vote-container');
+        const title = document.createElement('h2');
+        title.textContent = meme.title || 'Titolo non disponibile';
 
-        const likeButton = document.createElement('button');
-        likeButton.textContent = '👍';
-        const likeCount = document.createElement('span');
-        likeCount.textContent = meme.likes || 0;
+        const author = document.createElement('p');
+        author.textContent = `Autore: ${meme.uploader?.username || 'Sconosciuto'}`;
 
-        const dislikeButton = document.createElement('button');
-        dislikeButton.textContent = '👎';
-        const dislikeCount = document.createElement('span');
-        dislikeCount.textContent = meme.dislikes || 0;
+        const tagsContainer = document.createElement('div');
+        tagsContainer.classList.add('tags-container');
+        if (meme.tags?.length) {
+          meme.tags.forEach(tag => {
+            const tagElement = document.createElement('span');
+            tagElement.classList.add('tag');
+            tagElement.textContent = `#${tag.trim()}`;
+            tagsContainer.appendChild(tagElement);
+          });
+        }
 
-        likeButton.addEventListener('click', () => voteMeme(meme._id, 1, likeCount, dislikeCount));
-        dislikeButton.addEventListener('click', () => voteMeme(meme._id, -1, likeCount, dislikeCount));
-
-        voteContainer.appendChild(likeButton);
-        voteContainer.appendChild(likeCount);
-        voteContainer.appendChild(dislikeButton);
-        voteContainer.appendChild(dislikeCount);
+        infoPanel.appendChild(title);
+        infoPanel.appendChild(author);
+        if (tagsContainer.childElementCount > 0) infoPanel.appendChild(tagsContainer);
 
         memeContainer.appendChild(img);
-        memeContainer.appendChild(tags);
-        memeContainer.appendChild(voteContainer);
+        memeContainer.appendChild(infoPanel);
+
+        // Aggiungi evento per mostrare i dettagli del post al clic sull'intero contenitore
+        memeContainer.addEventListener('click', () => openPost(meme._id));
+
         grid.appendChild(memeContainer);
       });
     } catch (error) {

@@ -106,6 +106,22 @@
     margin-right: 0.2rem;
   }
 
+  .tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .tag {
+    background-color: #444; /* Sfondo grigio */
+    color: #fff; /* Testo bianco */
+    padding: 0.2rem 0.5rem;
+    border-radius: 100px; /* Angoli arrotondati */
+    font-size: 0.9rem;
+    font-style: italic;
+  }
+
   .vote-container {
     display: flex;
     justify-content: space-between;
