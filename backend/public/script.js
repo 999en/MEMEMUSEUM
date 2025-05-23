@@ -86,28 +86,75 @@ document.addEventListener('DOMContentLoaded', async () => {
     registerModal.style.display = 'none';
   });
 
-  loginForm.addEventListener('submit', (e) => {
+  loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
+    const errorMessage = document.getElementById('login-error');
 
-    fetch('/api/users/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-          checkAuthentication();
-          loginModal.style.display = 'none';
+    try {
+      const res = await fetch('/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        checkAuthentication();
+        loginModal.style.display = 'none';
+        errorMessage.classList.remove('show');
+      } else {
+        if (data.error === 'user_not_found') {
+          errorMessage.textContent = 'Utente non trovato. Vuoi registrarti?';
+          errorMessage.classList.add('show');
+          // Aggiungi un pulsante per passare alla registrazione
+          const registerLink = document.createElement('a');
+          registerLink.textContent = ' Clicca qui per registrarti';
+          registerLink.style.color = '#6c63ff';
+          registerLink.style.cursor = 'pointer';
+          registerLink.onclick = switchToRegister;
+          errorMessage.appendChild(registerLink);
+        } else if (data.error === 'invalid_password') {
+          errorMessage.textContent = 'Password errata. Riprova.';
+          errorMessage.classList.add('show');
         } else {
-          alert('Autenticazione fallita!');
+          errorMessage.textContent = 'Errore durante l\'accesso. Riprova.';
+          errorMessage.classList.add('show');
         }
-      })
-      .catch(err => console.error('Errore durante l\'autenticazione:', err));
+      }
+    } catch (err) {
+      console.error('Errore durante l\'autenticazione:', err);
+      errorMessage.textContent = 'Errore di connessione. Riprova più tardi.';
+      errorMessage.classList.add('show');
+    }
   });
+
+  // Funzione per passare dalla login alla registrazione
+  const switchToRegister = () => {
+    loginModal.style.display = 'none';
+    registerModal.style.display = 'flex';
+    // Reset degli errori e dei form quando si cambia vista
+    document.getElementById('login-error').classList.remove('show');
+    document.getElementById('login-form').reset();
+    document.getElementById('register-error').classList.remove('show');
+  }
+
+  // Funzione per passare dalla registrazione alla login
+  const switchToLogin = () => {
+    registerModal.style.display = 'none';
+    loginModal.style.display = 'flex';
+    // Reset degli errori e dei form quando si cambia vista
+    document.getElementById('register-error').classList.remove('show');
+    document.getElementById('register-form').reset();
+    document.getElementById('login-error').classList.remove('show');
+  }
+
+  // Aggiungere queste funzioni all'oggetto window per renderle disponibili globalmente
+  window.switchToRegister = switchToRegister;
+  window.switchToLogin = switchToLogin;
 
   registerForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -151,8 +198,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const res = await fetch(`/api/memes/${memeId}`);
       const meme = await res.json();
 
-      // Correggi il nome dell'autore
-      postAuthor.textContent = `Autore: ${meme.uploader?.username || 'Sconosciuto'}`;
+      // Aggiorna la visualizzazione dell'autore
+      postAuthor.textContent = meme.uploader?.username;
       postImage.src = meme.imageUrl;
       postImage.alt = 'Meme';
 
@@ -236,42 +283,40 @@ document.addEventListener('DOMContentLoaded', async () => {
       const memes = await res.json();
       grid.innerHTML = '';
 
-      const sortedMemes = memes.sort((a, b) => {
-        if (sortByVotes) {
-          // Ordina solo per upvotes in ordine decrescente
-          return (b.upvotes || 0) - (a.upvotes || 0);
-        } else {
-          // Ordina per data
-          const dateA = new Date(a.createdAt);
-          const dateB = new Date(b.createdAt);
-          return isDescendingOrder ? dateB - dateA : dateA - dateB;
-        }
-      });
+      // Debug per verificare i dati
+      console.log('Dati meme ricevuti:', memes);
 
-      sortedMemes.forEach((meme) => {
+      // Creiamo prima tutti gli elementi
+      const memeElements = await Promise.all(memes.map(async (meme) => {
+        // Recupera i dettagli del meme per assicurarci di avere l'autore
+        const memeDetailsRes = await fetch(`/api/memes/${meme._id}`);
+        const memeDetails = await memeDetailsRes.json();
+        
         const memeContainer = document.createElement('div');
         memeContainer.classList.add('meme-container');
 
         const img = document.createElement('img');
-        img.src = meme.imageUrl;
+        img.src = memeDetails.imageUrl;
         img.alt = 'Meme';
 
         const infoPanel = document.createElement('div');
         infoPanel.classList.add('info-panel');
 
         const title = document.createElement('h2');
-        title.textContent = meme.title || 'Titolo non disponibile';
+        title.textContent = memeDetails.title || 'Titolo non disponibile';
 
         const author = document.createElement('p');
-        author.textContent = `Autore: ${meme.uploader?.username || 'Sconosciuto'}`;
+        // Usa i dati del meme completo che includono l'uploader
+        author.textContent = memeDetails.uploader?.username || 'Sconosciuto';
+        author.classList.add('author');
 
         const tagsAndVotes = document.createElement('div');
         tagsAndVotes.classList.add('tags-and-votes');
 
         const tagsContainer = document.createElement('div');
         tagsContainer.classList.add('tags-container');
-        if (meme.tags?.length) {
-          meme.tags.forEach(tag => {
+        if (memeDetails.tags?.length) {
+          memeDetails.tags.forEach(tag => {
             const tagElement = document.createElement('button'); // Cambiato da span a button
             tagElement.classList.add('tag');
             tagElement.textContent = `#${tag.trim()}`;
@@ -297,7 +342,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
         upvoteButton.classList.add('vote-button', 'upvote');
         const upvoteCount = document.createElement('span');
-        upvoteCount.textContent = meme.upvotes || 0;
+        upvoteCount.textContent = memeDetails.upvotes || 0;
         upvoteCount.classList.add('vote-count', 'upvotes');
 
         const downvoteButton = document.createElement('button');
@@ -308,7 +353,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
         downvoteButton.classList.add('vote-button', 'downvote');
         const downvoteCount = document.createElement('span');
-        downvoteCount.textContent = meme.downvotes || 0;
+        downvoteCount.textContent = memeDetails.downvotes || 0;
         downvoteCount.classList.add('vote-count', 'downvotes');
 
         upvoteButton.onclick = async (e) => {
@@ -336,9 +381,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         memeContainer.appendChild(img);
         memeContainer.appendChild(infoPanel);
         memeContainer.addEventListener('click', () => openPost(meme._id));
-        
-        grid.appendChild(memeContainer);
+
+        return { element: memeContainer, meme: memeDetails };
+      }));
+
+      // Applica il sorting dopo aver recuperato tutti i dati
+      const sortedElements = memeElements.sort((a, b) => {
+        if (sortByVotes) {
+          return (b.meme.upvotes || 0) - (a.meme.upvotes || 0);
+        } else {
+          const dateA = new Date(a.meme.createdAt);
+          const dateB = new Date(b.meme.createdAt);
+          return isDescendingOrder ? dateB - dateA : dateA - dateB;
+        }
       });
+
+      // Aggiungi gli elementi ordinati alla griglia
+      sortedElements.forEach(({ element }) => {
+        grid.appendChild(element);
+      });
+
     } catch (error) {
       console.error('Errore durante il caricamento dei meme:', error);
       grid.innerHTML = `<p style="color: red;">Errore durante il caricamento dei meme: ${error.message}</p>`;
@@ -461,6 +523,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const author = document.createElement('p');
         author.textContent = `Autore: ${meme.uploader?.username || 'Sconosciuto'}`;
+        author.classList.add('author');
 
         const tagsAndVotes = document.createElement('div');
         tagsAndVotes.classList.add('tags-and-votes');
