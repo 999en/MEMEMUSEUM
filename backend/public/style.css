@@ -110,23 +110,37 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-top: 0.5rem;
+    background: none;
+    padding: 0;
+    min-width: fit-content;
   }
 
   .tag {
-    background-color: #444; /* Sfondo grigio */
-    color: #fff; /* Testo bianco */
-    padding: 0.2rem 0.5rem;
-    border-radius: 100px; /* Angoli arrotondati */
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
     font-size: 0.9rem;
-    font-style: italic;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+  }
+
+  .tag:hover {
+    transform: scale(1.1);
+    background: rgba(108, 99, 255, 0.2);
+    color: #6c63ff;
   }
 
   .tags-and-votes {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
     margin-top: 0.5rem;
+    flex-wrap: wrap;
   }
 
   .vote-container {

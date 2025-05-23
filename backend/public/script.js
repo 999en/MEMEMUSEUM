@@ -264,9 +264,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         tagsContainer.classList.add('tags-container');
         if (meme.tags?.length) {
           meme.tags.forEach(tag => {
-            const tagElement = document.createElement('span');
+            const tagElement = document.createElement('button'); // Cambiato da span a button
             tagElement.classList.add('tag');
             tagElement.textContent = `#${tag.trim()}`;
+            tagElement.onclick = (e) => {
+              e.stopPropagation();
+              // Imposta il valore nella barra di ricerca
+              searchBar.value = tag.trim();
+              // Esegue la ricerca
+              filterMemesByTag(tag.trim());
+            };
             tagsContainer.appendChild(tagElement);
           });
         }
@@ -441,9 +448,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         tagsContainer.classList.add('tags-container');
         if (meme.tags?.length) {
           meme.tags.forEach(tag => {
-            const tagElement = document.createElement('span');
+            const tagElement = document.createElement('button');
             tagElement.classList.add('tag');
             tagElement.textContent = `#${tag.trim()}`;
+            tagElement.onclick = (e) => {
+              e.stopPropagation();
+              searchBar.value = tag.trim();
+              filterMemesByTag(tag.trim());
+            };
             tagsContainer.appendChild(tagElement);
           });
         }
