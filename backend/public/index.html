@@ -53,13 +53,14 @@
     <button id="close-post">Chiudi</button>
     <h2 id="post-author">Autore: </h2>
     <img id="post-image" src="" alt="Meme" />
-    <p id="post-tags" style="font-style: italic; color: #666;">Tag: </p>
     <div id="comments-section">
       <h3>Commenti</h3>
-      <ul id="comments-list"></ul>
+      <ul id="comments-list">
+        <!-- I commenti verranno inseriti qui via JS -->
+      </ul>
       <form id="comment-form">
         <textarea id="comment-text" placeholder="Scrivi un commento..." required></textarea>
-        <button type="submit">Aggiungi Commento</button>
+        <button type="submit" id="send-comment">Invia</button>
       </form>
     </div>
   </section>

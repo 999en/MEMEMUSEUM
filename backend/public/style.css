@@ -6,8 +6,8 @@
   
   body {
     font-family: sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
+    background-color: rgb(24, 24, 24);
+    color: #3c3b3b;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -26,23 +26,19 @@
   }
   
   .grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem; /* Ridotto lo spazio tra le immagini */
+    display: flex;
+    flex-direction: column; /* Disposizione verticale */
+    align-items: center; /* Centra i post orizzontalmente */
+    gap: 2rem; /* Spazio tra i post */
+    width: 100%; /* Larghezza completa */
   }
   
   .grid img {
     width: 100%;
     height: auto;
-    border-radius: 8px;
-    border: 2px solid #ddd;
     transition: transform 0.2s ease;
   }
   
-  .grid img:hover {
-    transform: scale(1.05);
-    border-color: #444;
-  }
   
   footer {
     text-align: center;
@@ -53,38 +49,61 @@
   
   .meme-container {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: white;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    padding: 1rem;
-    width: 200px; /* Larghezza uniforme per tutte le cartucce */
-    text-align: center;
-    position: relative;
+    flex-direction: column; /* Disposizione verticale */
+    align-items: center; /* Centra il contenuto */
+    background-color: #1e1e1e; /* Sfondo scuro per il post */
+    color: #f5f5f5; /* Testo chiaro */
+    border: none; /* Rimuove il bordo */
+    border-radius: 12px; /* Angoli arrotondati */
+    width: 90%; /* Larghezza relativa */
+    max-width: 600px; /* Larghezza massima */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Ombra */
+    overflow: hidden; /* Nasconde il contenuto che esce dai bordi */
+    text-align: left; /* Allinea il contenuto a sinistra */
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.3s ease;
+  }
+
+  .meme-container:hover {
+    transform: scale(1.02); /* Leggero ingrandimento */
+    background-color: #2a2a2a; /* Sfondo più scuro al passaggio del mouse */
   }
 
   .meme-container img {
+    width: 100%; /* L'immagine occupa tutta la larghezza */
+    height: auto; /* Mantiene le proporzioni */
+    border-bottom: 1px solid #333; /* Separatore tra immagine e contenuto */
+  }
+
+  .info-panel {
+    padding: 1rem;
     width: 100%;
-    height: 200px; /* Altezza uniforme per tutte le immagini */
-    object-fit: cover; /* Adatta l'immagine senza distorcerla */
-    border-radius: 4px;
+  }
+
+  .info-panel h2 {
+    font-size: 1.2rem;
     margin-bottom: 0.5rem;
   }
 
-  .meme-container p {
+  .info-panel p {
     font-size: 1rem;
-    color: #333;
-    text-align: center;
+    margin-bottom: 0.5rem;
   }
 
-  .meme-container .tags {
+  .info-panel .tags {
     font-size: 0.9rem;
-    color: #666;
-    margin-top: 0.5rem;
+    background-color: #444;
+    color: #fff;
+    padding: 0.2rem 0.5rem;
+    border-radius: 100px;
+    display: inline-block;
+    margin-right: 0.5rem;
     font-style: italic;
+  }
+
+  .info-panel .tags::before {
+    content: '#';
+    margin-right: 0.2rem;
   }
 
   .vote-container {
@@ -124,25 +143,28 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    padding: 1rem;
+    background-color: #1e1e1e; /* Sfondo scuro */
+    border: 1px solid #333;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    padding: 1.5rem;
     z-index: 1000;
-    width: 80%;
-    max-width: 600px;
-    height: 80%;
-    max-height: 500px;
-    overflow: hidden;
+    width: 90%;
+    max-width: 800px; /* Più largo per ospitare i commenti */
+    height: 90%;
+    max-height: 90%;
+    overflow-y: auto; /* Consenti lo scorrimento dell'intero contenuto */
+    color: #f5f5f5; /* Testo chiaro */
   }
 
   #post-author {
     margin-bottom: 1rem;
+    font-size: 1.2rem;
+    font-weight: bold;
   }
 
   #post-details img {
-    width: 80%;
+    width: 100%;
     height: auto;
     border-radius: 8px;
     object-fit: cover;
@@ -154,11 +176,7 @@
     flex-direction: column;
     flex: 1;
     width: 100%;
-    overflow-y: auto;
-  }
-
-  #comments-section h3 {
-    margin-bottom: 0.5rem;
+    gap: 1rem;
   }
 
   #comments-list {
@@ -166,27 +184,59 @@
     padding: 0;
     margin: 0;
     flex: 1;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   #comments-list li {
-    margin-bottom: 0.5rem;
-    padding: 0.5rem;
-    border-bottom: 1px solid #ddd;
-  }
-
-  #comment-form {
+    background-color: #2a2a2a; /* Sfondo grigio scuro per i commenti */
+    padding: 1rem;
+    border-radius: 8px;
+    color: #ddd; /* Testo chiaro */
+    font-size: 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
   }
 
+  #comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
   #comment-text {
     width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    padding: 1rem;
+    border: 1px solid #444;
+    border-radius: 8px;
     resize: none;
+    background-color: #2a2a2a; /* Sfondo scuro */
+    color: #fff; /* Testo chiaro */
+    font-size: 1rem;
+  }
+
+  #comment-text:focus {
+    outline: none;
+    border-color: #6c63ff; /* Colore di focus */
+  }
+
+  #send-comment {
+    background-color: #007bff; /* Blu per il pulsante */
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    align-self: flex-end;
+    transition: background-color 0.3s ease;
+  }
+
+  #send-comment:hover {
+    background-color: #0056b3; /* Blu più scuro al passaggio del mouse */
   }
 
   #close-post {

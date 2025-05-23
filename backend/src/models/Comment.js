@@ -18,7 +18,7 @@ const commentSchema = new mongoose.Schema({
     trim: true
   }
 }, {
-  timestamps: true
+  timestamps: true // Aggiunge automaticamente createdAt e updatedAt
 });
 
 export default mongoose.model('Comment', commentSchema);

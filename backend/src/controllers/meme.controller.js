@@ -30,10 +30,28 @@ export const uploadMeme = async (req, res) => {
   }
 };
 
-// Recupera tutti i meme
+// Recupera tutti i meme ordinati per timestamp del primo commento
 export const getAllMemes = async (req, res) => {
   try {
-    const memes = await Meme.find().sort({ createdAt: -1 }).populate('uploader', 'username');
+    const memes = await Meme.aggregate([
+      {
+        $lookup: {
+          from: 'comments', // Collezione dei commenti
+          localField: '_id',
+          foreignField: 'meme',
+          as: 'comments'
+        }
+      },
+      {
+        $addFields: {
+          firstCommentTimestamp: { $min: '$comments.createdAt' } // Trova il timestamp del primo commento
+        }
+      },
+      {
+        $sort: { firstCommentTimestamp: 1 } // Ordina in base al timestamp del primo commento (ascendente)
+      }
+    ]);
+
     res.json(memes);
   } catch (err) {
     console.error('Errore nel recupero dei meme:', err);

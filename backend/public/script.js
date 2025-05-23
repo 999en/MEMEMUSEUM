@@ -29,20 +29,39 @@ document.addEventListener('DOMContentLoaded', async () => {
   function checkAuthentication() {
     const token = localStorage.getItem('token');
     if (token) {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      usernameSpan.textContent = payload.username;
-      welcomeMessage.style.display = 'block';
-      authButton.style.display = 'none';
-      registerButton.style.display = 'none';
-      logoutButton.style.display = 'inline-block';
-      uploadMemeButton.style.display = 'inline-block';
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
+
+        // Verifica se il token è scaduto
+        if (payload.exp && payload.exp < currentTime) {
+          alert('La sessione è scaduta. Effettua nuovamente il login.');
+          localStorage.removeItem('token');
+          return setUnauthenticatedState();
+        }
+
+        usernameSpan.textContent = payload.username;
+        welcomeMessage.style.display = 'block';
+        authButton.style.display = 'none';
+        registerButton.style.display = 'none';
+        logoutButton.style.display = 'inline-block';
+        uploadMemeButton.style.display = 'inline-block';
+      } catch (error) {
+        console.error('Errore durante la decodifica del token:', error);
+        localStorage.removeItem('token');
+        setUnauthenticatedState();
+      }
     } else {
-      welcomeMessage.style.display = 'none';
-      authButton.style.display = 'inline-block';
-      registerButton.style.display = 'inline-block';
-      logoutButton.style.display = 'none';
-      uploadMemeButton.style.display = 'none';
+      setUnauthenticatedState();
     }
+  }
+
+  function setUnauthenticatedState() {
+    welcomeMessage.style.display = 'none';
+    authButton.style.display = 'inline-block';
+    registerButton.style.display = 'inline-block';
+    logoutButton.style.display = 'none';
+    uploadMemeButton.style.display = 'none';
   }
 
   // Gestione del click sul bottone di autenticazione
@@ -132,20 +151,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       postImage.src = meme.imageUrl;
       postImage.alt = 'Meme';
 
-      // Visualizza i tag
-      const tags = meme.tags?.length ? meme.tags.join(', ') : 'Nessun tag';
-      document.getElementById('post-tags').textContent = `Tag: ${tags}`;
-
       // Carica i commenti
       const commentsRes = await fetch(`/api/comments/${memeId}`);
       const comments = await commentsRes.json();
 
       commentsList.innerHTML = '';
-      comments.forEach(comment => {
-        const li = document.createElement('li');
-        li.textContent = `${comment.author.username}: ${comment.text}`;
-        commentsList.appendChild(li);
-      });
+      comments
+        .slice() // Crea una copia dell'array
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // Ordina dal meno recente al più recente
+        .forEach(comment => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <strong>${comment.author?.username || 'Anonimo'}</strong>
+            <span>${comment.text}</span>
+          `;
+          commentsList.appendChild(li);
+        });
 
       // Mostra i dettagli del post
       postDetails.style.display = 'flex';
@@ -159,24 +180,50 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        const res = await fetch(`/api/comments/${memeId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ text: commentText.value })
-        });
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1])); // Decodifica il token per ottenere il nome utente
+          const username = payload.username;
 
-        if (res.ok) {
-          commentText.value = '';
-          openPost(memeId); // Ricarica i commenti
+          const res = await fetch(`/api/comments/${memeId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ text: commentText.value })
+          });
+
+          if (res.ok) {
+            const newComment = await res.json(); // Ottieni il nuovo commento dal server
+            commentText.value = ''; // Resetta il campo di testo
+            const li = document.createElement('li');
+            li.innerHTML = `
+              <strong>${username}</strong>
+              <span>${newComment.text}</span>
+            `;
+            commentsList.appendChild(li); // Aggiungi il nuovo commento all'ultima posizione
+          } else if (res.status === 401) {
+            alert('Sessione scaduta. Effettua nuovamente il login.');
+            localStorage.removeItem('token');
+            checkAuthentication();
+          } else {
+            const errorData = await res.json();
+            alert(`Errore: ${errorData.message || 'Impossibile aggiungere il commento.'}`);
+          }
+        } catch (error) {
+          console.error('Errore durante l\'invio del commento:', error);
+          alert('Errore durante l\'invio del commento.');
         }
       };
     } catch (error) {
       console.error('Errore durante l\'apertura del post:', error);
     }
   }
+
+  // Attiva la modalità dark mode sempre
+  document.body.classList.add('dark-mode');
+  document.querySelector('header').classList.add('dark-mode');
+  document.querySelector('footer').classList.add('dark-mode');
 
   async function loadMemes() {
     try {
@@ -192,40 +239,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         const img = document.createElement('img');
         img.src = meme.imageUrl; // Imposta l'URL dell'immagine
         img.alt = 'Meme';
-        img.addEventListener('click', () => openPost(meme._id)); // Apre il post
+
+        const infoPanel = document.createElement('div');
+        infoPanel.classList.add('info-panel');
+
+        const title = document.createElement('h2');
+        title.textContent = meme.title || 'Titolo non disponibile';
+
+        const author = document.createElement('p');
+        author.textContent = `Autore: ${meme.uploader?.username || 'Sconosciuto'}`;
 
         const tags = document.createElement('p');
         tags.classList.add('tags');
-        tags.textContent = meme.tags?.length ? `Tag: ${meme.tags.join(', ')}` : 'Tag: Nessun tag';
+        tags.innerHTML = meme.tags?.map(tag => `<span class="tags">${tag.trim()}</span>`).join(' ') || '<span class="tags">Nessun tag</span>';
 
-        const voteContainer = document.createElement('div');
-        voteContainer.classList.add('vote-container');
-
-        const likeButton = document.createElement('button');
-        likeButton.textContent = '👍';
-        const likeCount = document.createElement('span');
-        likeCount.textContent = meme.likes || 0;
-
-        const dislikeButton = document.createElement('button');
-        dislikeButton.textContent = '👎';
-        const dislikeCount = document.createElement('span');
-        dislikeCount.textContent = meme.dislikes || 0;
-
-        likeButton.addEventListener('click', () => voteMeme(meme._id, 1, likeCount, dislikeCount));
-        dislikeButton.addEventListener('click', () => voteMeme(meme._id, -1, likeCount, dislikeCount));
-
-        voteContainer.appendChild(likeButton);
-        voteContainer.appendChild(likeCount);
-        voteContainer.appendChild(dislikeButton);
-        voteContainer.appendChild(dislikeCount);
+        infoPanel.appendChild(title);
+        infoPanel.appendChild(author);
+        infoPanel.appendChild(tags);
 
         memeContainer.appendChild(img);
-        memeContainer.appendChild(tags);
-        memeContainer.appendChild(voteContainer);
+        memeContainer.appendChild(infoPanel);
+
+        // Aggiungi evento per mostrare i dettagli del post al clic sull'intero contenitore
+        memeContainer.addEventListener('click', () => openPost(meme._id));
+
         grid.appendChild(memeContainer);
       });
     } catch (error) {
       console.error('Errore durante il caricamento dei meme:', error);
+      grid.innerHTML = `<p style="color: red;">Errore durante il caricamento dei meme: ${error.message}</p>`;
     }
   }
 
