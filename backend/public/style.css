@@ -122,6 +122,13 @@
     font-style: italic;
   }
 
+  .tags-and-votes {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.5rem;
+  }
+
   .vote-container {
     display: flex;
     justify-content: space-between;
@@ -149,6 +156,59 @@
     font-size: 1rem;
     font-weight: bold;
     color: #333;
+  }
+
+  .voting-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    min-width: fit-content;
+  }
+
+  .vote-button {
+    color: #fff;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0.2rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .vote-button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .vote-button:hover {
+    transform: scale(1.1);
+  }
+
+  .vote-button.upvote:hover {
+    color: #48bb78;
+  }
+
+  .vote-button.downvote:hover {
+    color: #f56565;
+  }
+
+  .vote-count {
+    font-weight: bold;
+    min-width: 1.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  .vote-count.upvotes {
+    color: #48bb78;
+  }
+
+  .vote-count.downvotes {
+    color: #f56565;
   }
 
   #post-details {

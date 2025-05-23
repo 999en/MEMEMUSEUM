@@ -17,10 +17,18 @@ const memeSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  votes: {
+  upvotes: {
     type: Number,
-    default: 0 // Valore iniziale dei voti
-  }
+    default: 0
+  },
+  downvotes: {
+    type: Number,
+    default: 0
+  },
+  votedBy: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    voteType: { type: String, enum: ['up', 'down'] }
+  }]
 }, {
   timestamps: true
 });

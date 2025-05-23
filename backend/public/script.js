@@ -230,10 +230,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadMemes() {
     try {
-      const res = await fetch('/api/memes'); // Recupera i meme dal backend
+      const res = await fetch('/api/memes');
       const memes = await res.json();
-
-      grid.innerHTML = ''; // Pulisce la griglia
+      grid.innerHTML = '';
 
       const sortedMemes = memes.sort((a, b) => {
         const dateA = new Date(a.createdAt);
@@ -246,7 +245,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         memeContainer.classList.add('meme-container');
 
         const img = document.createElement('img');
-        img.src = meme.imageUrl; // Imposta l'URL dell'immagine
+        img.src = meme.imageUrl;
         img.alt = 'Meme';
 
         const infoPanel = document.createElement('div');
@@ -257,6 +256,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const author = document.createElement('p');
         author.textContent = `Autore: ${meme.uploader?.username || 'Sconosciuto'}`;
+
+        const tagsAndVotes = document.createElement('div');
+        tagsAndVotes.classList.add('tags-and-votes');
 
         const tagsContainer = document.createElement('div');
         tagsContainer.classList.add('tags-container');
@@ -269,21 +271,93 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
         }
 
+        const votingContainer = document.createElement('div');
+        votingContainer.classList.add('voting-container');
+        
+        const upvoteButton = document.createElement('button');
+        upvoteButton.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 19V5M5 12l7-7 7 7"/>
+          </svg>
+        `;
+        upvoteButton.classList.add('vote-button', 'upvote');
+        const upvoteCount = document.createElement('span');
+        upvoteCount.textContent = meme.upvotes || 0;
+        upvoteCount.classList.add('vote-count', 'upvotes');
+
+        const downvoteButton = document.createElement('button');
+        downvoteButton.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12l7 7 7-7"/>
+          </svg>
+        `;
+        downvoteButton.classList.add('vote-button', 'downvote');
+        const downvoteCount = document.createElement('span');
+        downvoteCount.textContent = meme.downvotes || 0;
+        downvoteCount.classList.add('vote-count', 'downvotes');
+
+        upvoteButton.onclick = async (e) => {
+          e.stopPropagation();
+          await handleVote(meme._id, 1, upvoteCount, downvoteCount);
+        };
+
+        downvoteButton.onclick = async (e) => {
+          e.stopPropagation();
+          await handleVote(meme._id, -1, upvoteCount, downvoteCount);
+        };
+
+        votingContainer.appendChild(upvoteButton);
+        votingContainer.appendChild(upvoteCount);
+        votingContainer.appendChild(downvoteButton);
+        votingContainer.appendChild(downvoteCount);
+
+        tagsAndVotes.appendChild(tagsContainer);
+        tagsAndVotes.appendChild(votingContainer);
+
         infoPanel.appendChild(title);
         infoPanel.appendChild(author);
-        if (tagsContainer.childElementCount > 0) infoPanel.appendChild(tagsContainer);
+        infoPanel.appendChild(tagsAndVotes);
 
         memeContainer.appendChild(img);
         memeContainer.appendChild(infoPanel);
-
-        // Aggiungi evento per mostrare i dettagli del post al clic sull'intero contenitore
         memeContainer.addEventListener('click', () => openPost(meme._id));
-
+        
         grid.appendChild(memeContainer);
       });
     } catch (error) {
       console.error('Errore durante il caricamento dei meme:', error);
       grid.innerHTML = `<p style="color: red;">Errore durante il caricamento dei meme: ${error.message}</p>`;
+    }
+  }
+
+  async function handleVote(memeId, value, upvoteElement, downvoteElement) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Devi essere autenticato per votare.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/votes/${memeId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ value })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        upvoteElement.textContent = data.upvotes;
+        downvoteElement.textContent = data.downvotes;
+      } else {
+        const error = await response.json();
+        alert(error.message);
+      }
+    } catch (error) {
+      console.error('Errore durante il voto:', error);
+      alert('Errore durante il voto.');
     }
   }
 
@@ -380,10 +454,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         memeContainer.appendChild(img);
         memeContainer.appendChild(infoPanel);
-
-        // Aggiungi evento per mostrare i dettagli del post al clic sull'intero contenitore
         memeContainer.addEventListener('click', () => openPost(meme._id));
-
         grid.appendChild(memeContainer);
       });
     } catch (error) {
