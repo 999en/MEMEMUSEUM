@@ -494,63 +494,79 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    padding: 0 2rem;
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto 2rem auto;
   }
 
   #search-bar {
-    width: 50%;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    width: 100%;
+    padding: 1rem 1.5rem;
     font-size: 1rem;
-    transition: border-color 0.3s ease;
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
   }
 
   #search-bar:focus {
     outline: none;
     border-color: #6c63ff;
+    background-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 15px rgba(108, 99, 255, 0.2);
+  }
+
+  #search-bar::placeholder {
+    color: rgba(255, 255, 255, 0.5);
   }
 
   #search-button {
-    background-color: #6c63ff;
-    color: white;
+    position: absolute;
+    right: 2.5rem;
+    background: none;
     border: none;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 4px;
+    color: #6c63ff;
+    padding: 0.75rem;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
   }
 
   #search-button:hover {
-    background-color: #574dcf;
+    transform: scale(1.1);
+    color: #fff;
   }
 
   #order-toggle-container {
     display: flex;
-    justify-content: flex-end; /* Posiziona il bottone sulla destra */
+    justify-content: flex-end;
+    gap: 1rem;
     margin-bottom: 1rem;
-    padding-right: 2rem; /* Aggiunge spazio a destra */
+    padding-right: 2rem;
   }
 
-  #order-toggle-button {
-    background-color: #6c63ff; /* Colore di base */
+  #order-toggle-button,
+  #votes-toggle-button {
+    background-color: #6c63ff;
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
     font-size: 1rem;
-    border-radius: 50px; /* Angoli arrotondati */
+    border-radius: 50px;
     cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Effetto ombra */
-    transition: background-color 0.3s ease, transform 0.2s ease; /* Transizioni per hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
   }
 
-  #order-toggle-button:hover {
-    background-color: #574dcf; /* Colore hover */
-    transform: scale(1.05); /* Leggero ingrandimento */
+  #order-toggle-button:hover,
+  #votes-toggle-button:hover {
+    transform: scale(1.05);
   }
 
-  #order-toggle-button:active {
-    background-color: #4839b3; /* Colore al click */
-    transform: scale(0.95); /* Leggero rimpicciolimento */
+  #votes-toggle-button.active {
+    background-color: #48bb78;
   }
