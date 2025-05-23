@@ -451,3 +451,32 @@
   #search-button:hover {
     background-color: #574dcf;
   }
+
+  #order-toggle-container {
+    display: flex;
+    justify-content: flex-end; /* Posiziona il bottone sulla destra */
+    margin-bottom: 1rem;
+    padding-right: 2rem; /* Aggiunge spazio a destra */
+  }
+
+  #order-toggle-button {
+    background-color: #6c63ff; /* Colore di base */
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 50px; /* Angoli arrotondati */
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Effetto ombra */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Transizioni per hover */
+  }
+
+  #order-toggle-button:hover {
+    background-color: #574dcf; /* Colore hover */
+    transform: scale(1.05); /* Leggero ingrandimento */
+  }
+
+  #order-toggle-button:active {
+    background-color: #4839b3; /* Colore al click */
+    transform: scale(0.95); /* Leggero rimpicciolimento */
+  }

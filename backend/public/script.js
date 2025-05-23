@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const uploadMemeForm = document.getElementById('upload-meme-form');
   const searchBar = document.getElementById('search-bar');
   const searchButton = document.getElementById('search-button');
+  const orderToggleButton = document.getElementById('order-toggle-button');
+
+  let isDescendingOrder = true; // Ordine predefinito: dal più recente al meno recente
 
   // Funzione per verificare se l'utente è autenticato
   function checkAuthentication() {
@@ -232,7 +235,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       grid.innerHTML = ''; // Pulisce la griglia
 
-      memes.forEach((meme) => {
+      const sortedMemes = memes.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return isDescendingOrder ? dateB - dateA : dateA - dateB;
+      });
+
+      sortedMemes.forEach((meme) => {
         const memeContainer = document.createElement('div');
         memeContainer.classList.add('meme-container');
 
@@ -277,6 +286,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       grid.innerHTML = `<p style="color: red;">Errore durante il caricamento dei meme: ${error.message}</p>`;
     }
   }
+
+  orderToggleButton.addEventListener('click', () => {
+    isDescendingOrder = !isDescendingOrder;
+    orderToggleButton.textContent = isDescendingOrder
+      ? 'Dal più recente'
+      : 'Dal meno recente';
+    loadMemes(); // Ricarica i meme con il nuovo ordine
+  });
 
   function voteMeme(memeId, value, likeCountElement, dislikeCountElement) {
     const token = localStorage.getItem('token');
