@@ -1,16 +1,13 @@
 // src/controllers/vote.controller.js
 import Vote from '../models/Vote.js';
 import Meme from '../models/Meme.js';
+import { NotFoundError } from '../utils/errors.js';
 
-export const voteMeme = async (req, res) => {
-  try {
-    const { memeId } = req.params;
-    const { value } = req.body;
-    const userId = req.user.id;
-
+export class VoteController {
+  static async voteMeme(memeId, userId, value) {
     const meme = await Meme.findById(memeId);
     if (!meme) {
-      return res.status(404).json({ message: 'Meme non trovato' });
+      throw new NotFoundError('Meme non trovato');
     }
 
     const existingVoteIndex = meme.votedBy.findIndex(
@@ -18,22 +15,18 @@ export const voteMeme = async (req, res) => {
     );
 
     if (existingVoteIndex > -1) {
-      // Rimuovi il voto precedente
       const oldVote = meme.votedBy[existingVoteIndex];
       if (oldVote.voteType === 'up') meme.upvotes--;
       else meme.downvotes--;
       
       if (oldVote.voteType === (value === 1 ? 'up' : 'down')) {
-        // Se l'utente clicca lo stesso voto, rimuovilo
         meme.votedBy.splice(existingVoteIndex, 1);
       } else {
-        // Cambia il voto
         meme.votedBy[existingVoteIndex].voteType = value === 1 ? 'up' : 'down';
         if (value === 1) meme.upvotes++;
         else meme.downvotes++;
       }
     } else {
-      // Aggiungi nuovo voto
       meme.votedBy.push({
         user: userId,
         voteType: value === 1 ? 'up' : 'down'
@@ -43,44 +36,27 @@ export const voteMeme = async (req, res) => {
     }
 
     await meme.save();
-    
-    res.json({
+    return {
       upvotes: meme.upvotes,
       downvotes: meme.downvotes
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Errore durante la votazione.' });
+    };
   }
-};
 
-export const getUserVotes = async (req, res) => {
-  try {
-    const votes = await Vote.find({ user: req.user.id })
+  static async getUserVotes(userId) {
+    return await Vote.find({ user: userId })
       .populate('meme', 'title imageUrl')
       .sort({ createdAt: -1 });
-    res.json(votes);
-  } catch (err) {
-    res.status(500).json({ message: 'Errore nel recupero dei voti' });
   }
-};
 
-export const deleteVote = async (req, res) => {
-  try {
-    const vote = await Vote.findOne({
-      meme: req.params.memeId,
-      user: req.user.id
-    });
-
+  static async deleteVote(memeId, userId) {
+    const vote = await Vote.findOne({ meme: memeId, user: userId });
     if (!vote) {
-      return res.status(404).json({ message: 'Voto non trovato' });
+      throw new NotFoundError('Voto non trovato');
     }
 
     await vote.deleteOne();
-    res.json({ message: 'Voto rimosso con successo' });
-  } catch (err) {
-    res.status(500).json({ message: 'Errore nella rimozione del voto' });
+    return { message: 'Voto rimosso con successo' };
   }
-};
+}
 
-export default { voteMeme, getUserVotes, deleteVote };
+export default VoteController;

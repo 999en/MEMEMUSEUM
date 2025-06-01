@@ -3,41 +3,32 @@ import Meme from '../models/Meme.js';
 import Comment from '../models/Comment.js';
 import path from 'path';
 import fs from 'fs';
+import { NotFoundError, ValidationError, AuthError } from '../utils/errors.js';
 
-// Upload di un nuovo meme
-export const uploadMeme = async (req, res) => {
-  try {
-    const { title, tags } = req.body;
-    const uploader = req.user.id; // Disponibile grazie a authMiddleware
-
-    if (!req.file) {
-      return res.status(400).json({ message: 'Nessuna immagine caricata' });
+export class MemeController {
+  static async uploadMeme(data, file, user) {
+    if (!file) {
+      throw new ValidationError('Nessuna immagine caricata');
     }
 
-    const parsedTags = tags ? tags.split(',').map(tag => tag.trim()) : [];
+    const parsedTags = data.tags ? data.tags.split(',').map(tag => tag.trim()) : [];
 
     const meme = new Meme({
-      title: title || 'Meme senza titolo',
+      title: data.title || 'Meme senza titolo',
       tags: parsedTags,
-      imageUrl: `/uploads/${req.file.filename}`, // Salva il percorso relativo dell'immagine
-      uploader, // Associa l'utente autenticato
+      imageUrl: `/uploads/${file.filename}`,
+      uploader: user.id
     });
 
     await meme.save();
-    res.status(201).json(meme); // Ritorna il meme salvato
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Errore durante il caricamento del meme' });
+    return meme;
   }
-};
 
-// Recupera tutti i meme ordinati per timestamp del primo commento
-export const getAllMemes = async (req, res) => {
-  try {
-    const memes = await Meme.aggregate([
+  static async getAllMemes() {
+    return await Meme.aggregate([
       {
         $lookup: {
-          from: 'comments', // Collezione dei commenti
+          from: 'comments',
           localField: '_id',
           foreignField: 'meme',
           as: 'comments'
@@ -45,52 +36,37 @@ export const getAllMemes = async (req, res) => {
       },
       {
         $addFields: {
-          firstCommentTimestamp: { $min: '$comments.createdAt' } // Trova il timestamp del primo commento
+          firstCommentTimestamp: { $min: '$comments.createdAt' }
         }
       },
       {
-        $sort: { firstCommentTimestamp: 1 } // Ordina in base al timestamp del primo commento (ascendente)
+        $sort: { firstCommentTimestamp: 1 }
       }
     ]);
-
-    res.json(memes);
-  } catch (err) {
-    console.error('Errore nel recupero dei meme:', err);
-    res.status(500).json({ message: 'Errore nel recupero dei meme.' });
   }
-};
 
-// Recupera un meme specifico
-export const getMemeById = async (req, res) => {
-  try {
-    const meme = await Meme.findById(req.params.id)
+  static async getMemeById(id) {
+    const meme = await Meme.findById(id)
       .populate('uploader', 'username _id')
       .lean();
     
     if (!meme) {
-      return res.status(404).json({ message: 'Meme non trovato' });
+      throw new NotFoundError('Meme non trovato');
     }
 
-    // Verifica che l'uploader esista
     if (!meme.uploader) {
       meme.uploader = { username: 'Utente eliminato', _id: null };
     }
 
-    res.json(meme);
-  } catch (err) {
-    console.error('Errore nel recupero del meme:', err);
-    res.status(500).json({ message: 'Errore nel recupero del meme' });
+    return meme;
   }
-};
 
-export const searchMemes = async (req, res) => {
-  try {
-    const { tag, sortBy = 'createdAt', order = 'desc', page = 1 } = req.query;
-
-    const query = {};
-
+  static async searchMemes(query) {
+    const { tag, sortBy = 'createdAt', order = 'desc', page = 1 } = query;
+    const searchQuery = {};
+    
     if (tag) {
-      query.tags = { $in: [tag] };
+      searchQuery.tags = { $in: [tag] };
     }
 
     const sortOptions = {};
@@ -100,43 +76,30 @@ export const searchMemes = async (req, res) => {
       sortOptions.createdAt = order === 'asc' ? 1 : -1;
     }
 
-    const memes = await Meme.find(query)
+    return await Meme.find(searchQuery)
       .sort(sortOptions)
       .skip((page - 1) * 10)
       .limit(10)
       .populate('author', 'username');
-
-    res.json(memes);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Errore durante la ricerca dei meme.' });
   }
-};
 
-export const deleteMeme = async (req, res) => {
-  try {
-    const meme = await Meme.findById(req.params.id);
+  static async deleteMeme(memeId, userId) {
+    const meme = await Meme.findById(memeId);
     
     if (!meme) {
-      return res.status(404).json({ message: "Meme non trovato" });
+      throw new NotFoundError('Meme non trovato');
     }
 
-    // Verifica che l'utente sia il proprietario del meme
-    if (meme.uploader.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Non sei autorizzato a eliminare questo meme" });
+    if (meme.uploader.toString() !== userId) {
+      throw new AuthError('Non sei autorizzato a eliminare questo meme');
     }
 
-    // Elimina tutti i commenti associati al meme
-    await Comment.deleteMany({ meme: req.params.id });
-    
-    // Elimina il meme
-    await Meme.findByIdAndDelete(req.params.id);
+    await Comment.deleteMany({ meme: memeId });
+    await Meme.findByIdAndDelete(memeId);
 
-    // Ottieni il nome del file dall'URL
     const fileName = meme.imageUrl.split('/').pop();
     const imagePath = path.join(process.cwd(), 'uploads', fileName);
 
-    // Prova a eliminare il file se esiste
     try {
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
@@ -145,55 +108,42 @@ export const deleteMeme = async (req, res) => {
       console.error('Errore durante l\'eliminazione del file:', fileErr);
     }
 
-    res.json({ message: "Meme eliminato con successo" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return { message: 'Meme eliminato con successo' };
   }
-};
 
-export const updateMeme = async (req, res) => {
-  try {
-    // Popoliamo esplicitamente il campo uploader
-    const meme = await Meme.findById(req.params.id).populate('uploader');
+  static async updateMeme(memeId, data, file, userId) {
+    const meme = await Meme.findById(memeId).populate('uploader');
 
     if (!meme) {
-      return res.status(404).json({ message: "Meme non trovato" });
+      throw new NotFoundError('Meme non trovato');
     }
 
-    // Controlli di sicurezza sull'autorizzazione
     if (!meme.uploader || !meme.uploader._id) {
-      return res.status(403).json({ message: "Proprietario del meme non trovato" });
+      throw new AuthError('Proprietario del meme non trovato');
     }
 
-    // Confronto sicuro degli ID
-    if (meme.uploader._id.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Non sei autorizzato a modificare questo meme" });
+    if (meme.uploader._id.toString() !== userId) {
+      throw new AuthError('Non sei autorizzato a modificare questo meme');
     }
 
-    // Aggiorna i campi forniti
-    if (req.body.title) meme.title = req.body.title;
-    if (req.body.tags) {
-      meme.tags = req.body.tags.split(',').map(tag => tag.trim());
+    if (data.title) meme.title = data.title;
+    if (data.tags) {
+      meme.tags = data.tags.split(',').map(tag => tag.trim());
     }
 
-    // Se è stata caricata una nuova immagine
-    if (req.file) {
-      // Elimina la vecchia immagine se esiste
+    if (file) {
       if (meme.imageUrl) {
         const oldImagePath = path.join(process.cwd(), 'uploads', path.basename(meme.imageUrl));
         if (fs.existsSync(oldImagePath)) {
           fs.unlinkSync(oldImagePath);
         }
       }
-      meme.imageUrl = `/uploads/${req.file.filename}`;
+      meme.imageUrl = `/uploads/${file.filename}`;
     }
 
-    const updatedMeme = await meme.save();
-    res.json(updatedMeme);
-
-  } catch (error) {
-    console.error('Errore durante la modifica del meme:', error);
-    res.status(500).json({ message: "Errore durante la modifica del meme" });
+    return await meme.save();
   }
-};
+}
+
+export default MemeController;
 

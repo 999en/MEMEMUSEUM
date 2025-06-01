@@ -1,71 +1,54 @@
 // src/controllers/comment.controller.js
 import Comment from '../models/Comment.js';
+import { NotFoundError, AuthError } from '../utils/errors.js';
 
-export const createComment = async (req, res) => {
-  try {
-    const { text } = req.body;
-    const memeId = req.params.memeId;
-    const userId = req.user.id;
-
+export class CommentController {
+  static async createComment(memeId, text, userId) {
     const comment = new Comment({
       meme: memeId,
       author: userId,
       text
     });
-
+    
     await comment.save();
-    res.status(201).json(comment);
-  } catch (err) {
-    res.status(500).json({ message: 'Errore nella creazione del commento' });
+    return comment;
   }
-};
 
-export const getCommentsForMeme = async (req, res) => {
-  try {
-    const memeId = req.params.memeId;
-    const comments = await Comment.find({ meme: memeId }).populate('author', 'username').sort({ createdAt: -1 });
-    res.json(comments);
-  } catch (err) {
-    res.status(500).json({ message: 'Errore nel recupero dei commenti' });
+  static async getCommentsForMeme(memeId) {
+    return await Comment.find({ meme: memeId })
+      .populate('author', 'username')
+      .sort({ createdAt: -1 });
   }
-};
 
-export const updateComment = async (req, res) => {
-  try {
-    const { text } = req.body;
-    const comment = await Comment.findById(req.params.id);
-
+  static async updateComment(commentId, text, userId) {
+    const comment = await Comment.findById(commentId);
+    
     if (!comment) {
-      return res.status(404).json({ message: 'Commento non trovato' });
+      throw new NotFoundError('Commento non trovato');
     }
 
-    if (comment.author.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Non autorizzato' });
+    if (comment.author.toString() !== userId) {
+      throw new AuthError('Non autorizzato a modificare questo commento');
     }
 
     comment.text = text;
-    await comment.save();
-    res.json(comment);
-  } catch (err) {
-    res.status(500).json({ message: 'Errore nell\'aggiornamento del commento' });
+    return await comment.save();
   }
-};
 
-export const deleteComment = async (req, res) => {
-  try {
-    const comment = await Comment.findById(req.params.id);
+  static async deleteComment(commentId, userId) {
+    const comment = await Comment.findById(commentId);
     
     if (!comment) {
-      return res.status(404).json({ message: 'Commento non trovato' });
+      throw new NotFoundError('Commento non trovato');
     }
 
-    if (comment.author.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Non autorizzato' });
+    if (comment.author.toString() !== userId) {
+      throw new AuthError('Non autorizzato a eliminare questo commento');
     }
 
     await comment.deleteOne();
-    res.json({ message: 'Commento eliminato con successo' });
-  } catch (err) {
-    res.status(500).json({ message: 'Errore nell\'eliminazione del commento' });
+    return { message: 'Commento eliminato con successo' };
   }
-};
+}
+
+export default CommentController;

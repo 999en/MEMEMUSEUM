@@ -46,6 +46,22 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/votes', voteRoutes);
 app.use('/api/users', userRoutes);
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.log(err.stack);
+  res.status(err.status || 500).json({
+    code: err.status || 500,
+    description: err.message || "An error occurred"
+  });
+});
+
+app.use((req, res) => {
+  res.status(404).json({
+    code: 404,
+    description: "Route not found"
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'OK' });
