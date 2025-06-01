@@ -61,12 +61,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  function resetAllForms() {
+    // Reset dei form di autenticazione
+    loginForm.reset();
+    registerForm.reset();
+    document.getElementById('login-error').classList.remove('show');
+    document.getElementById('register-error').classList.remove('show');
+    
+    // Reset del form di upload
+    uploadMemeForm.reset();
+    
+    // Reset del form dei commenti
+    commentForm?.reset();
+    
+    // Reset della barra di ricerca
+    searchBar.value = '';
+  }
+
+  function refreshPage() {
+    resetAllForms();
+    loadMemes();
+    window.scrollTo(0, 0);
+  }
+
   function setUnauthenticatedState() {
     welcomeMessage.style.display = 'none';
     authButton.style.display = 'inline-block';
     registerButton.style.display = 'inline-block';
     logoutButton.style.display = 'none';
     uploadMemeButton.style.display = 'none';
+    refreshPage();
   }
 
   // Gestione del click sul bottone di autenticazione
@@ -80,10 +104,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   closeLoginModal.addEventListener('click', () => {
     loginModal.style.display = 'none';
+    loginForm.reset();
   });
 
   closeRegisterModal.addEventListener('click', () => {
     registerModal.style.display = 'none';
+    registerForm.reset();
   });
 
   loginForm.addEventListener('submit', async (e) => {
@@ -105,7 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         localStorage.setItem('token', data.token);
         checkAuthentication();
         loginModal.style.display = 'none';
-        errorMessage.classList.remove('show');
+        refreshPage();
       } else {
         if (data.error === 'user_not_found') {
           errorMessage.textContent = 'Utente non trovato. Vuoi registrarti?';
@@ -136,9 +162,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const switchToRegister = () => {
     loginModal.style.display = 'none';
     registerModal.style.display = 'flex';
-    // Reset degli errori e dei form quando si cambia vista
+    loginForm.reset();
+    registerForm.reset();
     document.getElementById('login-error').classList.remove('show');
-    document.getElementById('login-form').reset();
     document.getElementById('register-error').classList.remove('show');
   }
 
@@ -146,17 +172,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const switchToLogin = () => {
     registerModal.style.display = 'none';
     loginModal.style.display = 'flex';
-    // Reset degli errori e dei form quando si cambia vista
-    document.getElementById('register-error').classList.remove('show');
-    document.getElementById('register-form').reset();
+    loginForm.reset();
+    registerForm.reset();
     document.getElementById('login-error').classList.remove('show');
+    document.getElementById('register-error').classList.remove('show');
   }
 
   // Aggiungere queste funzioni all'oggetto window per renderle disponibili globalmente
   window.switchToRegister = switchToRegister;
   window.switchToLogin = switchToLogin;
 
-  registerForm.addEventListener('submit', (e) => {
+  registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('register-username').value;
     const password = document.getElementById('register-password').value;
@@ -173,6 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           alert('Registrazione completata con successo!');
           checkAuthentication();
           registerModal.style.display = 'none';
+          refreshPage();
         } else {
           alert(`Errore durante la registrazione: ${data.message}`);
         }
@@ -184,6 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   logoutButton.addEventListener('click', () => {
     localStorage.removeItem('token');
     checkAuthentication();
+    refreshPage();
   });
 
   // Verifica autenticazione al caricamento della pagina
@@ -196,12 +224,46 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function openPost(memeId) {
     try {
       const res = await fetch(`/api/memes/${memeId}`);
-      const meme = await res.json();
+      if (!res.ok) {
+        throw new Error('Errore nel recupero del meme');
+      }
 
-      // Aggiorna la visualizzazione dell'autore
-      postAuthor.textContent = meme.uploader?.username;
-      postImage.src = meme.imageUrl;
-      postImage.alt = 'Meme';
+      const meme = await res.json();
+      if (!meme) {
+        throw new Error('Meme non trovato');
+      }
+
+      // Mostra/nascondi i bottoni di modifica ed eliminazione in base all'autore
+      const deleteButton = document.getElementById('delete-meme');
+      const editButton = document.getElementById('edit-meme');
+      const token = localStorage.getItem('token');
+      
+      // Nascondi i bottoni di default
+      deleteButton.style.display = 'none';
+      editButton.style.display = 'none';
+
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          // Verifica che sia meme.uploader che payload.id esistano
+          const isOwner = meme.uploader && payload.id && meme.uploader._id === payload.id;
+          
+          if (isOwner) {
+            deleteButton.style.display = 'block';
+            editButton.style.display = 'block';
+            
+            editButton.onclick = () => openEditModal(meme);
+            deleteButton.onclick = () => deleteMeme(meme._id);
+          }
+        } catch (error) {
+          console.error('Errore nella verifica del proprietario:', error);
+        }
+      }
+
+      // Aggiorna la visualizzazione dell'autore in modo sicuro
+      postAuthor.textContent = meme.uploader?.username || 'Utente sconosciuto';
+      postImage.src = meme.imageUrl || '';
+      postImage.alt = meme.title || 'Meme';
 
       // Carica i commenti
       const commentsRes = await fetch(`/api/comments/${memeId}`);
@@ -246,14 +308,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
 
           if (res.ok) {
-            const newComment = await res.json(); // Ottieni il nuovo commento dal server
-            commentText.value = ''; // Resetta il campo di testo
+            const newComment = await res.json();
+            commentText.value = '';
             const li = document.createElement('li');
             li.innerHTML = `
               <strong>${username}</strong>
               <span>${newComment.text}</span>
             `;
-            commentsList.appendChild(li); // Aggiungi il nuovo commento all'ultima posizione
+            commentsList.appendChild(li);
+            commentForm.reset();
           } else if (res.status === 401) {
             alert('Sessione scaduta. Effettua nuovamente il login.');
             localStorage.removeItem('token');
@@ -269,8 +332,102 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
     } catch (error) {
       console.error('Errore durante l\'apertura del post:', error);
+      alert('Errore durante l\'apertura del post: ' + error.message);
     }
   }
+
+  async function deleteMeme(memeId) {
+    if (!confirm('Sei sicuro di voler eliminare questo meme?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Token non disponibile');
+      }
+
+      const response = await fetch(`/api/memes/${memeId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Errore durante l\'eliminazione');
+      }
+
+      alert('Meme eliminato con successo');
+      document.getElementById('post-details').style.display = 'none';
+      loadMemes();
+    } catch (error) {
+      console.error('Errore durante l\'eliminazione:', error);
+      alert('Errore durante l\'eliminazione: ' + error.message);
+    }
+  }
+
+  function openEditModal(meme) {
+    try {
+      const editModal = document.getElementById('edit-meme-modal');
+      const editForm = document.getElementById('edit-meme-form');
+      const titleInput = document.getElementById('edit-title');
+      const tagsInput = document.getElementById('edit-tags');
+
+      if (!meme) {
+        throw new Error('Dati del meme non disponibili');
+      }
+
+      titleInput.value = meme.title || '';
+      tagsInput.value = meme.tags ? meme.tags.join(', ') : '';
+
+      editModal.style.display = 'flex';
+
+      editForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(editForm);
+        
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            throw new Error('Token non disponibile');
+          }
+
+          const response = await fetch(`/api/memes/${meme._id}`, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData
+          });
+
+          if (response.ok) {
+            const updatedMeme = await response.json();
+            alert('Meme modificato con successo!');
+            editModal.style.display = 'none';
+            loadMemes();
+            document.getElementById('post-details').style.display = 'none';
+          } else {
+            const error = await response.json();
+            throw new Error(error.message || 'Errore durante la modifica');
+          }
+        } catch (error) {
+          console.error('Errore durante la modifica:', error);
+          alert('Errore durante la modifica del meme: ' + error.message);
+        }
+      };
+    } catch (error) {
+      console.error('Errore nell\'apertura del modal di modifica:', error);
+      alert('Errore nell\'apertura del modal di modifica');
+    }
+  }
+
+  // Aggiungi event listener per chiudere il modal di modifica
+  document.getElementById('close-edit-modal').addEventListener('click', () => {
+    document.getElementById('edit-meme-modal').style.display = 'none';
+    document.getElementById('edit-meme-form').reset();
+  });
 
   // Attiva la modalità dark mode sempre
   document.body.classList.add('dark-mode');
@@ -612,6 +769,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   closeUploadModal.addEventListener('click', () => {
     uploadMemeModal.style.display = 'none';
+    uploadMemeForm.reset();
   });
 
   uploadMemeForm.addEventListener('submit', async (e) => {
@@ -637,7 +795,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('Meme uploaded successfully!');
         uploadMemeModal.style.display = 'none';
         uploadMemeForm.reset();
-        loadMemes(); // Reload memes
+        refreshPage();
       } else {
         const errorData = await res.json();
         alert(`Error: ${errorData.message || 'Failed to upload meme.'}`);

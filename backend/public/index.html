@@ -57,6 +57,8 @@
     <button id="close-post">Chiudi</button>
     <h2 id="post-author">Autore: </h2>
     <img id="post-image" src="" alt="Meme" />
+    <button id="delete-meme" style="display: none;">Elimina Meme</button>
+    <button id="edit-meme" style="display: none;">Modifica Meme</button>
     <div id="comments-section">
       <h3>Commenti</h3>
       <ul id="comments-list">
@@ -106,6 +108,29 @@
       <div class="switch-form">
         Hai già un account?<a onclick="switchToLogin()">Accedi</a>
       </div>
+    </div>
+  </div>
+
+  <div id="edit-meme-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <button id="close-edit-modal" class="close-button">X</button>
+      <h2>Modifica Meme</h2>
+      <form id="edit-meme-form" enctype="multipart/form-data">
+        <label for="edit-title">Titolo</label>
+        <input type="text" id="edit-title" name="title" required />
+        
+        <label for="edit-tags">Tags (separati da virgola)</label>
+        <input type="text" id="edit-tags" name="tags" />
+        
+        <label for="edit-image">Nuova immagine (opzionale)</label>
+        <div class="upload-image-container">
+          <input type="file" id="edit-image" name="image" accept="image/*" />
+          <p>Click per caricare o trascina un'immagine</p>
+          <p>PNG, JPG o GIF (MAX. 5MB)</p>
+        </div>
+        
+        <button type="submit" class="upload-submit-button">Salva Modifiche</button>
+      </form>
     </div>
   </div>
   

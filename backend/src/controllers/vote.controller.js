@@ -54,4 +54,33 @@ export const voteMeme = async (req, res) => {
   }
 };
 
-export default { voteMeme };
+export const getUserVotes = async (req, res) => {
+  try {
+    const votes = await Vote.find({ user: req.user.id })
+      .populate('meme', 'title imageUrl')
+      .sort({ createdAt: -1 });
+    res.json(votes);
+  } catch (err) {
+    res.status(500).json({ message: 'Errore nel recupero dei voti' });
+  }
+};
+
+export const deleteVote = async (req, res) => {
+  try {
+    const vote = await Vote.findOne({
+      meme: req.params.memeId,
+      user: req.user.id
+    });
+
+    if (!vote) {
+      return res.status(404).json({ message: 'Voto non trovato' });
+    }
+
+    await vote.deleteOne();
+    res.json({ message: 'Voto rimosso con successo' });
+  } catch (err) {
+    res.status(500).json({ message: 'Errore nella rimozione del voto' });
+  }
+};
+
+export default { voteMeme, getUserVotes, deleteVote };

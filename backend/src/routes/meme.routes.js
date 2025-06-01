@@ -1,20 +1,19 @@
 // src/routes/meme.routes.js
 import express from 'express';
-import { uploadMeme, getAllMemes, getMemeById, searchMemes } from '../controllers/meme.controller.js';
+import { uploadMeme, getAllMemes, getMemeById, searchMemes, deleteMeme, updateMeme } from '../controllers/meme.controller.js';
 import upload from '../middlewares/uploadMiddleware.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// Carica un nuovo meme (autenticazione + upload immagine)
-router.post('/', authMiddleware, upload.single('image'), uploadMeme);
-// Recupera i meme dalla cartella uploads
-router.get('/', getAllMemes);
-
-// Recupera un meme specifico per ID
-router.get('/:id', getMemeById);
-
-// Cerca meme per tag, ordine, data, ecc.
+// Rotte specifiche prima
 router.get('/search', searchMemes);
+router.get('/', getAllMemes);
+router.post('/', authMiddleware, upload.single('image'), uploadMeme);
+
+// Rotte parametriche dopo
+router.get('/:id', getMemeById);
+router.delete('/:id', authMiddleware, deleteMeme);
+router.patch('/:id', authMiddleware, upload.single('image'), updateMeme);
 
 export default router;
