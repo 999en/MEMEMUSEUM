@@ -4,27 +4,27 @@ import { AuthError, ValidationError } from '../utils/errors.js';
 
 export class AuthController {
   static async register(userData) {
-    const { username, email, password } = userData;
+    const { username, password } = userData;
 
-    const existingUser = await User.findOne({ 
-      $or: [{ username }, { email }] 
-    });
-
-    if (existingUser) {
-      throw new ValidationError('Username o email già in uso');
+    if (!username || !password) {
+      throw new ValidationError('Username e password sono richiesti');
     }
 
-    const user = new User({ username, email, password });
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      throw new ValidationError('Username già in uso');
+    }
+
+    const user = new User({ username, password });
     await user.save();
 
     const token = jwt.sign(
       { id: user._id, username: user.username },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
 
     return {
-      message: 'Utente registrato con successo',
       token,
       user: {
         id: user._id,
@@ -34,47 +34,35 @@ export class AuthController {
   }
 
   static async login(credentials) {
-    const { email, password } = credentials;
+    const { username, password } = credentials;
 
-    const user = await User.findOne({ email });
+    if (!username || !password) {
+      throw new ValidationError('Username e password sono richiesti');
+    }
+
+    const user = await User.findOne({ username });
     if (!user) {
-      throw new AuthError('Credenziali non valide');
+      throw new AuthError('Utente non trovato');
     }
 
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
-      throw new AuthError('Credenziali non valide');
+      throw new AuthError('Password non valida');
     }
 
     const token = jwt.sign(
       { id: user._id, username: user.username },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
 
     return {
-      message: 'Login effettuato con successo',
       token,
       user: {
         id: user._id,
         username: user.username
       }
     };
-  }
-
-  static async validateToken(token) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(decoded.id).select('-password');
-      
-      if (!user) {
-        throw new AuthError('Utente non trovato');
-      }
-
-      return user;
-    } catch (err) {
-      throw new AuthError('Token non valido');
-    }
   }
 }
 

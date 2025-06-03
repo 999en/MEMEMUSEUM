@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const errorMessage = document.getElementById('login-error');
 
     try {
-      const res = await fetch('/api/users/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -127,33 +127,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const data = await res.json();
 
+      if (!res.ok) {
+        throw new Error(data.message || 'Errore durante il login');
+      }
+
       if (data.token) {
         localStorage.setItem('token', data.token);
-        checkAuthentication();
-        loginModal.style.display = 'none';
-        refreshPage();
-      } else {
-        if (data.error === 'user_not_found') {
-          errorMessage.textContent = 'Utente non trovato. Vuoi registrarti?';
-          errorMessage.classList.add('show');
-          // Aggiungi un pulsante per passare alla registrazione
-          const registerLink = document.createElement('a');
-          registerLink.textContent = ' Clicca qui per registrarti';
-          registerLink.style.color = '#6c63ff';
-          registerLink.style.cursor = 'pointer';
-          registerLink.onclick = switchToRegister;
-          errorMessage.appendChild(registerLink);
-        } else if (data.error === 'invalid_password') {
-          errorMessage.textContent = 'Password errata. Riprova.';
-          errorMessage.classList.add('show');
-        } else {
-          errorMessage.textContent = 'Errore durante l\'accesso. Riprova.';
-          errorMessage.classList.add('show');
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
         }
+        loginModal.style.display = 'none';
+        loginForm.reset();
+        checkAuthentication();
+        refreshPage();
       }
     } catch (err) {
-      console.error('Errore durante l\'autenticazione:', err);
-      errorMessage.textContent = 'Errore di connessione. Riprova più tardi.';
+      console.error('Errore durante il login:', err);
+      errorMessage.textContent = err.message;
       errorMessage.classList.add('show');
     }
   });
@@ -186,30 +176,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     const username = document.getElementById('register-username').value;
     const password = document.getElementById('register-password').value;
+    const errorMessage = document.getElementById('register-error');
 
-    fetch('/api/users/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-          alert('Registrazione completata con successo!');
-          checkAuthentication();
-          registerModal.style.display = 'none';
-          refreshPage();
-        } else {
-          alert(`Errore durante la registrazione: ${data.message}`);
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Errore durante la registrazione');
+      }
+
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
         }
-      })
-      .catch(err => console.error('Errore durante la registrazione:', err));
+        registerModal.style.display = 'none';
+        registerForm.reset();
+        alert('Registrazione completata con successo!');
+        checkAuthentication();
+        refreshPage();
+      }
+    } catch (err) {
+      console.error('Errore durante la registrazione:', err);
+      errorMessage.textContent = err.message;
+      errorMessage.classList.add('show');
+    }
   });
 
   // Gestione del click sul bottone di logout
   logoutButton.addEventListener('click', () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     checkAuthentication();
     refreshPage();
   });
