@@ -23,48 +23,51 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Middleware
-// Serve il frontend statico
-app.use(express.static(path.join(__dirname, '../public')));
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
-// Route home page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
-app.use(express.json({ limit: '10mb' })); // Aumenta il limite per upload
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE']
-}));
+app.use(express.json({ limit: '10mb' }));
 app.use(helmet());
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
-// API routes
+// Static file serving
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use(express.static(path.join(__dirname, '../public')));
+
+// API health check
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'OK' });
+});
+
+// API routes - devono venire prima della route generica '/'
 app.use('/api/auth', authRoutes);
 app.use('/api/memes', memeRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/votes', voteRoutes);
 app.use('/api/users', userRoutes);
 
+// Route home page - deve venire dopo le API routes
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.log(err.stack);
+  console.error(err.stack);
   res.status(err.status || 500).json({
     code: err.status || 500,
     description: err.message || "An error occurred"
   });
 });
 
+// 404 handler - deve essere l'ultimo
 app.use((req, res) => {
   res.status(404).json({
     code: 404,
     description: "Route not found"
   });
-});
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'OK' });
 });
 
 // Connessione a MongoDB e avvio del server
