@@ -32,8 +32,12 @@ app.use(cors({
   credentials: true
 }));
 
-// Static file serving
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Static file serving with CORP headers
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.join(__dirname, '../uploads')));
+
 app.use(express.static(path.join(__dirname, '../public')));
 
 // API health check

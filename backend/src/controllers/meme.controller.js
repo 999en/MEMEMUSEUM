@@ -28,6 +28,14 @@ export class MemeController {
     return await Meme.aggregate([
       {
         $lookup: {
+          from: 'users',
+          localField: 'uploader',
+          foreignField: '_id',
+          as: 'uploaderInfo'
+        }
+      },
+      {
+        $lookup: {
           from: 'comments',
           localField: '_id',
           foreignField: 'meme',
@@ -36,11 +44,37 @@ export class MemeController {
       },
       {
         $addFields: {
-          firstCommentTimestamp: { $min: '$comments.createdAt' }
+          firstCommentTimestamp: { $min: '$comments.createdAt' },
+          uploader: {
+            $cond: {
+              if: { $eq: [{ $size: "$uploaderInfo" }, 0] },
+              then: { _id: "unknown", username: "Utente sconosciuto" },
+              else: {
+                _id: { $arrayElemAt: ["$uploaderInfo._id", 0] },
+                username: { $arrayElemAt: ["$uploaderInfo.username", 0] }
+              }
+            }
+          }
         }
       },
       {
-        $sort: { firstCommentTimestamp: 1 }
+        $project: {
+          _id: 1,
+          title: 1,
+          imageUrl: 1,
+          tags: 1,
+          upvotes: 1,
+          downvotes: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          comments: 1,
+          firstCommentTimestamp: 1,
+          uploader: 1,
+          votedBy: 1
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
       }
     ]);
   }
