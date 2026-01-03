@@ -47,11 +47,11 @@ export class MemeController {
           firstCommentTimestamp: { $min: '$comments.createdAt' },
           uploader: {
             $cond: {
-              if: { $eq: [{ $size: "$uploaderInfo" }, 0] },
-              then: { _id: "unknown", username: "Utente sconosciuto" },
+              if: { $eq: [{ $size: '$uploaderInfo' }, 0] },
+              then: { _id: 'unknown', username: 'Utente sconosciuto' },
               else: {
-                _id: { $arrayElemAt: ["$uploaderInfo._id", 0] },
-                username: { $arrayElemAt: ["$uploaderInfo.username", 0] }
+                _id: { $arrayElemAt: ['$uploaderInfo._id', 0] },
+                username: { $arrayElemAt: ['$uploaderInfo.username', 0] }
               }
             }
           }
@@ -83,7 +83,7 @@ export class MemeController {
     const meme = await Meme.findById(id)
       .populate('uploader', 'username _id')
       .lean();
-    
+
     if (!meme) {
       throw new NotFoundError('Meme non trovato');
     }
@@ -98,7 +98,7 @@ export class MemeController {
   static async searchMemes(query) {
     const { tag, sortBy = 'createdAt', order = 'desc', page = 1 } = query;
     const searchQuery = {};
-    
+
     if (tag) {
       searchQuery.tags = { $in: [tag] };
     }
@@ -119,7 +119,7 @@ export class MemeController {
 
   static async deleteMeme(memeId, userId) {
     const meme = await Meme.findById(memeId);
-    
+
     if (!meme) {
       throw new NotFoundError('Meme non trovato');
     }
@@ -180,4 +180,3 @@ export class MemeController {
 }
 
 export default MemeController;
-

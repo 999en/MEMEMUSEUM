@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Metodo per criptare la password prima di salvarla
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
   try {
@@ -28,7 +28,7 @@ userSchema.pre('save', async function(next) {
 });
 
 // Metodo per verificare la password
-userSchema.methods.comparePassword = function(password) {
+userSchema.methods.comparePassword = function (password) {
   return bcrypt.compare(password, this.password);
 };
 

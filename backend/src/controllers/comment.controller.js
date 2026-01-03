@@ -9,7 +9,7 @@ export class CommentController {
       author: userId,
       text
     });
-    
+
     await comment.save();
     return comment;
   }
@@ -22,7 +22,7 @@ export class CommentController {
 
   static async updateComment(commentId, text, userId) {
     const comment = await Comment.findById(commentId);
-    
+
     if (!comment) {
       throw new NotFoundError('Commento non trovato');
     }
@@ -37,7 +37,7 @@ export class CommentController {
 
   static async deleteComment(commentId, userId) {
     const comment = await Comment.findById(commentId);
-    
+
     if (!comment) {
       throw new NotFoundError('Commento non trovato');
     }

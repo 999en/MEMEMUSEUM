@@ -17,7 +17,7 @@ export class VoteController {
       const oldVote = meme.votedBy[existingVoteIndex];
       if (oldVote.voteType === 'up') meme.upvotes--;
       else meme.downvotes--;
-      
+
       if (oldVote.voteType === (value === 1 ? 'up' : 'down')) {
         meme.votedBy.splice(existingVoteIndex, 1);
       } else {
@@ -45,7 +45,7 @@ export class VoteController {
     const memes = await Meme.find({ 'votedBy.user': userId })
       .select('title imageUrl votedBy upvotes downvotes createdAt')
       .lean();
-    
+
     return memes.map(meme => {
       const userVote = meme.votedBy.find(v => v.user.toString() === userId);
       return {
