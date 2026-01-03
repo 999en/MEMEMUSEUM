@@ -1,5 +1,4 @@
 // src/controllers/vote.controller.js
-import Vote from '../models/Vote.js';
 import Meme from '../models/Meme.js';
 import { NotFoundError } from '../utils/errors.js';
 
@@ -43,18 +42,46 @@ export class VoteController {
   }
 
   static async getUserVotes(userId) {
-    return await Vote.find({ user: userId })
-      .populate('meme', 'title imageUrl')
-      .sort({ createdAt: -1 });
+    const memes = await Meme.find({ 'votedBy.user': userId })
+      .select('title imageUrl votedBy upvotes downvotes createdAt')
+      .lean();
+    
+    return memes.map(meme => {
+      const userVote = meme.votedBy.find(v => v.user.toString() === userId);
+      return {
+        _id: meme._id,
+        meme: {
+          _id: meme._id,
+          title: meme.title,
+          imageUrl: meme.imageUrl
+        },
+        voteType: userVote ? userVote.voteType : null,
+        createdAt: meme.createdAt
+      };
+    });
   }
 
   static async deleteVote(memeId, userId) {
-    const vote = await Vote.findOne({ meme: memeId, user: userId });
-    if (!vote) {
+    const meme = await Meme.findById(memeId);
+    if (!meme) {
+      throw new NotFoundError('Meme non trovato');
+    }
+
+    const voteIndex = meme.votedBy.findIndex(
+      vote => vote.user.toString() === userId
+    );
+
+    if (voteIndex === -1) {
       throw new NotFoundError('Voto non trovato');
     }
 
-    await vote.deleteOne();
+    const voteType = meme.votedBy[voteIndex].voteType;
+    if (voteType === 'up') meme.upvotes--;
+    else meme.downvotes--;
+
+    meme.votedBy.splice(voteIndex, 1);
+    await meme.save();
+
     return { message: 'Voto rimosso con successo' };
   }
 }
