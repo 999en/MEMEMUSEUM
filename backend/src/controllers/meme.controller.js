@@ -114,7 +114,7 @@ export class MemeController {
       .sort(sortOptions)
       .skip((page - 1) * 10)
       .limit(10)
-      .populate('author', 'username');
+      .populate('uploader', 'username _id');
   }
 
   static async deleteMeme(memeId, userId) {

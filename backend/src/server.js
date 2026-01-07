@@ -68,6 +68,7 @@ app.use((err, req, res, next) => {
 
 // 404 handler - deve essere l'ultimo
 app.use((req, res) => {
+  console.error(`❌ 404 Route not found: ${req.method} ${req.url}`);
   res.status(404).json({
     code: 404,
     description: "Route not found"

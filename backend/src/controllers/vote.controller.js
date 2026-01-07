@@ -82,7 +82,11 @@ export class VoteController {
     meme.votedBy.splice(voteIndex, 1);
     await meme.save();
 
-    return { message: 'Voto rimosso con successo' };
+    return { 
+      message: 'Voto rimosso con successo',
+      upvotes: meme.upvotes,
+      downvotes: meme.downvotes
+    };
   }
 }
 

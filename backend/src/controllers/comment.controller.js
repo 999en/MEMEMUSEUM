@@ -11,6 +11,8 @@ export class CommentController {
     });
 
     await comment.save();
+    // Populate the author before returning
+    await comment.populate('author', 'username');
     return comment;
   }
 
