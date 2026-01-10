@@ -1,9 +1,7 @@
-// src/middlewares/uploadMiddleware.js
 import multer from 'multer';
 import path from 'path';
 import config from '../config/config.js';
 
-// Configurazione dello storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, config.uploadsDir);
@@ -15,7 +13,6 @@ const storage = multer.diskStorage({
   }
 });
 
-// Filtro per immagini
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|gif/;
   const ext = allowedTypes.test(path.extname(file.originalname).toLowerCase());

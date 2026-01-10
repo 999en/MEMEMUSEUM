@@ -1,4 +1,3 @@
-// src/models/Meme.js
 import mongoose from 'mongoose';
 
 const memeSchema = new mongoose.Schema({

@@ -1,4 +1,3 @@
-// src/controllers/user.controller.js
 import User from '../models/User.js';
 import Meme from '../models/Meme.js';
 import { AuthError, NotFoundError } from '../utils/errors.js';

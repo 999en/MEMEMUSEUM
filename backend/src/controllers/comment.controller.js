@@ -1,4 +1,3 @@
-// src/controllers/comment.controller.js
 import Comment from '../models/Comment.js';
 import { NotFoundError, AuthError } from '../utils/errors.js';
 

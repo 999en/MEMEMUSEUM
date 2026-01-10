@@ -1,4 +1,3 @@
-// src/controllers/meme.controller.js
 import Meme from '../models/Meme.js';
 import Comment from '../models/Comment.js';
 import path from 'path';

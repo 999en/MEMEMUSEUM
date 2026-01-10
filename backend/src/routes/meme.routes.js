@@ -1,4 +1,3 @@
-// src/routes/meme.routes.js
 import express from 'express';
 import { MemeController } from '../controllers/meme.controller.js';
 import upload from '../middlewares/uploadMiddleware.js';
